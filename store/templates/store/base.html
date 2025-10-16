@@ -1,0 +1,125 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Kepto{% endblock title %}</title>
+
+    <link rel="stylesheet" href="{% static 'store/css/base.css' %}">
+    
+    {% block extra_css %}
+    {% endblock extra_css %}
+</head>
+
+<body>
+
+    <header>
+        <div class="top-row">
+            <div class="logo-location">
+                <span class="logo">Kepto</span>
+                <span class="location">Delivery in 8 minutes • Dharmanagar</span>
+            </div>
+            <div class="icons">
+                <img src="https://cdn-icons-png.flaticon.com/512/263/263142.png" alt="Cart Icon" title="Cart">
+                <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Profile Icon" title="Profile">
+            </div>
+        </div>
+        <div class="search-bar">
+            <input type="text" placeholder="Search for items" />
+        </div>
+
+        <div class="top-category-bar">
+            <a href="#" class="top-category-item active">
+                <span class="top-category-item-icon"></span>
+                <span>All</span>
+            </a>
+            <a href="#" class="top-category-item">
+                <span class="top-category-item-icon"></span>
+                <span>Cafe</span>
+            </a>
+            <a href="#" class="top-category-item">
+                <span class="top-category-item-icon"></span>
+                <span>Home</span>
+            </a>
+            <a href="#" class="top-category-item">
+                <span class="top-category-item-icon"></span>
+                <span>Toys</span>
+            </a>
+            <a href="#" class="top-category-item">
+                <span class="top-category-item-icon"></span>
+                <span>Fresh</span>
+            </a>
+            <a href="#" class="top-category-item">
+                <span class="top-category-item-icon"></span>
+                <span>Electronics</span>
+            </a>
+            <a href="#" class="top-category-item">
+                <span class="top-category-item-icon"></span>
+                <span>Mobiles</span>
+            </a>
+            <a href="#" class="top-category-item">
+                <span class="top-category-item-icon"></span>
+                <span>Beauty</span>
+            </a>
+            <a href="#" class="top-category-item">
+                <span class="top-category-item-icon"></span>
+                <span>Fashion</span>
+            </a>
+        </div>
+    </header>
+
+    {% block content %}
+    {% endblock content %}
+
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-section">
+                <h4>Seller & Resources</h4>
+                <ul>
+                    <li><a href="#">Seller</a></li>
+                    <li><a href="#">Warehouse</a></li>
+                    <li><a href="#">Deliver</a></li>
+                    <li><a href="#">Resources</a></li>
+                    <li><a href="#">Recipes</a></li>
+                    <li><a href="#">Bistro</a></li>
+                    <li><a href="#">District</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4>Categories</h4>
+                <ul>
+                    <li><a href="#">Vegetables & Fruits</a></li>
+                    <li><a href="#">Dairy & Breakfast</a></li>
+                    <li><a href="#">Electronics & Electricals</a></li>
+                    <li><a href="#">Stationery Needs</a></li>
+                    <li><a href="#">Books</a></li>
+                    <li><a href="#">Toys & Games</a></li>
+                    <li><a href="#">Print Store</a></li>
+                    <li><a href="#">E-Gift Cards</a></li>
+                    <li><a href="#">Rakhi Gifts</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4>Connect With Us</h4>
+                <div class="social-icons">
+                    <a href="https://www.facebook.com/profile.php?id=100094334681913&sk=about"><img src="https://cdn-icons-png.flaticon.com/512/733/733547.png" alt="Facebook"></a>
+                    <a href="#"><img src="https://cdn-icons-png.flaticon.com/512/733/733558.png" alt="Twitter"></a>
+                    <a href="#"><img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram"></a>
+                    <a href="#"><img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" alt="YouTube"></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>© 2025 Kepto. All Rights Reserved. Built for demo purposes.</p>
+        </div>
+    </footer>
+
+</body>
+
+</html>
