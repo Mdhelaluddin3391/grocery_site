@@ -5,49 +5,77 @@
     overflow-x: auto;
     overflow-y: hidden;
     padding-bottom: 10px;
+    scroll-snap-type: x mandatory; 
+    scroll-behavior: smooth;
 }
 
 .promo-card {
     flex-shrink: 0;
-    /* INCREASED SIZE */
-    width: 1200px;
-    height: 270px;
+    width: 86vw;
+    /* Phone ke liye chota size */
+    height: 180px;
+    /* Phone ke liye chota height */
     border-radius: 10px;
     background-color: #ffe0b2;
-    display: flex;
-    align-items: center;
+    display: block;
     padding: 15px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     position: relative;
     overflow: hidden;
+    color: #fff;
+    /* Text color ko white set kiya taaki image par dikhe */
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+    /* Text ko image pe saaf dikhane ke liye shadow */
+
+    /* NEW: Scroll snap alignment */
+    scroll-snap-align: start;
 }
 
 .promo-card.dark-theme {
+    /* theme color ke liye dark background agar image load na ho */
     background-color: #8a2be2;
     color: #fff;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+}
+
+/* Content (Text) ko image ke upar laana */
+.promo-content {
+    position: relative;
+    /* z-index apply karne ke liye */
+    z-index: 2;
+    /* Text ki layer, image se upar */
+    width: 60%;
+    /* Mobile pe content ko thoda left mein rakha */
 }
 
 .promo-content h3 {
-    /* SLIGHTLY LARGER TEXT */
-    font-size: 1.3rem;
+    font-size: 1.2rem;
+    /* Mobile text size */
     margin-bottom: 5px;
     font-weight: 700;
     line-height: 1.2;
 }
 
 .promo-content p {
-    /* SLIGHTLY LARGER TEXT */
     font-size: 0.9rem;
+    /* Mobile text size */
     font-weight: 500;
 }
 
+/* Image ko poore card par cover karna */
 .promo-image {
-    /* INCREASED IMAGE SIZE */
-    width: 1000px;
-    height: 270px;
-    margin-left: auto;
-    border-radius: 0%;
-    object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    /* Pura width lega */
+    height: 100%;
+    /* Poori height lega */
+    object-fit: contain;
+    /* Pura image card mein fit ho jayega */
+    z-index: 1;
+    /* Image ki layer */
+    border-radius: 0;
 }
 
 /* ====== CATEGORY SCROLLER STYLES ====== */
