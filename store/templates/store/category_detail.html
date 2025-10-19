@@ -1,0 +1,58 @@
+{% extends 'store/base.html' %}
+{% load static %}
+
+{% block title %}{{ category.name }} - Kepto{% endblock title %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'store/css/category_detail.css' %}">
+{% endblock extra_css %}
+
+{% block content %}
+<div class="container">
+
+    <aside class="sidebar">
+        <ul class="sidebar-nav">
+            {% for sub in subcategories %}
+            <li class="{% if sub.id == category.id %}active{% endif %}">
+                <a href="{% url 'category_detail' sub.slug %}">
+                    
+                    <img src="{{ sub.icon.url|default:'https://via.placeholder.com/50' }}" alt="{{ sub.name }}">
+                    
+                    {{ sub.name }}
+                </a>
+            </li>
+            {% empty %}
+            <li>No subcategories available</li>
+            {% endfor %}
+        </ul>
+    </aside>
+
+    <main class="product-grid-container">
+        <div class="product-grid">
+            {% for product in products %}
+            <div class="product-card">
+                {% if product.discount %}
+                <span class="product-discount">{{ product.discount }} OFF</span>
+                {% endif %}
+                <img src="{{ product.image.url|default:'https://via.placeholder.com/150' }}" alt="{{ product.name }}">
+                <div class="product-time">⏱ {{ product.time|default:"25 MINS" }}</div>
+                <h3 class="product-name">{{ product.name }}</h3>
+                <p class="product-quantity">{{ product.quantity|default:"500 ml" }}</p>
+                <div class="product-footer">
+                    <div class="product-price">
+                        {% if product.old_price %}
+                        <span class="old-price">₹{{ product.old_price }}</span>
+                        {% endif %}
+                        ₹{{ product.price }}
+                    </div>
+                    <button class="add-btn">ADD</button>
+                </div>
+            </div>
+            {% empty %}
+            <p>No products available in this category.</p>
+            {% endfor %}
+        </div>
+    </main>
+
+</div>
+{% endblock content %}

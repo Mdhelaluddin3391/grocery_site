@@ -51,6 +51,13 @@ header {
     color: #00a94f;
 }
 
+/* Is code ko delete kar dein */
+/* === YEH NAYA AUR BEHTAR CODE ADD KAREIN === */
+.logo-link, .logo-link:hover {
+    text-decoration: none !important; /* Underline ko force karke hatata hai */
+    border-bottom: none !important;   /* Agar galti se border hai, toh use bhi hatata hai */
+}
+/* ========================================= */
 .location {
     font-size: 0.9rem;
     color: #777;

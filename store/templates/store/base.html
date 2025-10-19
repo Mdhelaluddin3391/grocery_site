@@ -5,12 +5,9 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{% block title %}kepto{% endblock title %}</title>
-
-    <link rel="stylesheet" href="{% static 'store/css/base.css' %}">
-    
-    {% block extra_css %}
-    {% endblock extra_css %}
+    <title>{% block title %}Kepto{% endblock title %}</title>
+    <link rel="stylesheet" href="{% static 'store/css/base.css' %}?v=1.1">
+    {% block extra_css %}{% endblock extra_css %}
 </head>
 
 <body>
@@ -18,7 +15,7 @@
     <header>
         <div class="top-row">
             <div class="logo-location">
-                <span class="logo">A to Z mart</span>
+                <a href="{% url 'home' %}" class="logo-link"><span class="logo">QuickDash</span></a>
                 <span class="location">Delivery in 8 minutes • Dharmanagar</span>
             </div>
             <div class="icons">
@@ -31,48 +28,21 @@
         </div>
 
         <div class="top-category-bar">
-            <a href="#" class="top-category-item active">
-                <span class="top-category-item-icon"></span>
+            <a href="{% url 'home' %}" class="top-category-item {% if not category %}active{% endif %}">
                 <span>All</span>
             </a>
-            <a href="#" class="top-category-item">
-                <span class="top-category-item-icon"></span>
-                <span>Cafe</span>
+            {% for cat in main_categories %}
+            <a href="{% url 'category_detail' cat.slug %}"
+                class="top-category-item {% if category.id == cat.id %}active{% endif %}">
+                <span>{{ cat.name }}</span>
             </a>
-            <a href="#" class="top-category-item">
-                <span class="top-category-item-icon"></span>
-                <span>Home</span>
-            </a>
-            <a href="#" class="top-category-item">
-                <span class="top-category-item-icon"></span>
-                <span>Toys</span>
-            </a>
-            <a href="#" class="top-category-item">
-                <span class="top-category-item-icon"></span>
-                <span>Fresh</span>
-            </a>
-            <a href="#" class="top-category-item">
-                <span class="top-category-item-icon"></span>
-                <span>Electronics</span>
-            </a>
-            <a href="#" class="top-category-item">
-                <span class="top-category-item-icon"></span>
-                <span>Mobiles</span>
-            </a>
-            <a href="#" class="top-category-item">
-                <span class="top-category-item-icon"></span>
-                <span>Beauty</span>
-            </a>
-            <a href="#" class="top-category-item">
-                <span class="top-category-item-icon"></span>
-                <span>Fashion</span>
-            </a>
+            {% endfor %}
         </div>
     </header>
 
-    {% block content %}
-    {% endblock content %}
-
+    <main class="main-content">
+        {% block content %}{% endblock content %}
+    </main>
 
     <footer>
         <div class="footer-container">
@@ -92,22 +62,19 @@
             <div class="footer-section">
                 <h4>Categories</h4>
                 <ul>
-                    <li><a href="#">Vegetables & Fruits</a></li>
-                    <li><a href="#">Dairy & Breakfast</a></li>
-                    <li><a href="#">Electronics & Electricals</a></li>
-                    <li><a href="#">Stationery Needs</a></li>
-                    <li><a href="#">Books</a></li>
-                    <li><a href="#">Toys & Games</a></li>
-                    <li><a href="#">Print Store</a></li>
-                    <li><a href="#">E-Gift Cards</a></li>
-                    <li><a href="#">Rakhi Gifts</a></li>
+                    {% for cat in footer_all_categories %}
+                    <li><a href="{% url 'category_detail' cat.slug %}">{{ cat.name }}</a></li>
+                    {% empty %}
+                    <li>No categories found.</li>
+                    {% endfor %}
                 </ul>
             </div>
 
             <div class="footer-section">
                 <h4>Connect With Us</h4>
                 <div class="social-icons">
-                    <a href="https://www.facebook.com/profile.php?id=100094334681913&sk=about"><img src="https://cdn-icons-png.flaticon.com/512/733/733547.png" alt="Facebook"></a>
+                    <a href="https://www.facebook.com/profile.php?id=100094334681913&sk=about"><img
+                            src="https://cdn-icons-png.flaticon.com/512/733/733547.png" alt="Facebook"></a>
                     <a href="#"><img src="https://cdn-icons-png.flaticon.com/512/733/733558.png" alt="Twitter"></a>
                     <a href="#"><img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram"></a>
                     <a href="#"><img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" alt="YouTube"></a>
@@ -119,7 +86,8 @@
             <p>© 2025 Kepto. All Rights Reserved. Built for demo purposes.</p>
         </div>
     </footer>
-<script src="{% static 'store/js/main.js' %}"></script>
+
+    <script src="{% static 'store/js/main.js' %}"></script>
 </body>
 
 </html>

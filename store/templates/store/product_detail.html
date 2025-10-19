@@ -1,0 +1,62 @@
+{% extends 'store/base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} - Kepto{% endblock title %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'store/css/product_detail.css' %}">
+{% endblock extra_css %}
+
+{% block content %}
+<div class="product-detail-container">
+    <div class="product-view">
+        <div class="product-image-section">
+            <img src="{{ product.image.url|default:'https://via.placeholder.com/300' }}" alt="{{ product.name }}">
+        </div>
+        <div class="product-info-section">
+            <h1 class="product-title">{{ product.name }}</h1>
+            <p class="product-meta-quantity">{{ product.quantity|default:'500 ml' }}</p>
+            
+            <div class="price-box">
+                <span class="current-price">₹{{ product.price }}</span>
+                {% if product.old_price %}
+                <span class="original-price">₹{{ product.old_price }}</span>
+                {% endif %}
+                {% if product.discount %}
+                <span class="discount-tag">{{ product.discount }}</span>
+                {% endif %}
+            </div>
+
+            <button class="add-to-cart-btn add-btn" data-product-id="{{ product.id }}">ADD TO CART</button>
+
+            <div class="product-description">
+                <h3>Description</h3>
+                <p>{{ product.description|default:"No description available for this product."|linebreaks }}</p>
+            </div>
+        </div>
+    </div>
+
+    {% if related_products %}
+    <div class="related-products">
+        <h2>You might also like</h2>
+        <div class="scroll-container">
+            <div class="product-grid">
+                {% for prod in related_products %}
+                <div class="product">
+                    <a href="{% url 'product_detail' prod.slug %}">
+                        <img src="{{ prod.image.url|default:'https://via.placeholder.com/150' }}" alt="{{ prod.name }}">
+                    </a>
+                    <h4>{{ prod.name }}</h4>
+                    <p>{{ prod.quantity|default:"" }}</p>
+                    <div class="price">
+                        <span>₹{{ prod.price }}</span>
+                        <button class="add-btn" data-product-id="{{ prod.id }}">ADD</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock content %}

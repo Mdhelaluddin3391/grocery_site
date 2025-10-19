@@ -1,229 +1,83 @@
 {% extends 'store/base.html' %}
 {% load static %}
 
-{% block title %}Kepto - Home{% endblock title %}
+{% block title %}QuickDash - Home{% endblock title %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'store/css/index.css' %}">
+<link rel="stylesheet" href="{% static 'store/css/index.css' %}?v=1.1">
 {% endblock extra_css %}
 
 {% block content %}
 
-    <section>
-        <div class="section-header">
-            <h2>Kepto Specials</h2>
-            <a href="#">See All Offers</a>
-        </div>
-        <div class="scroll-banner">
-            <a href="#" class="promo-card">
-                <div class="promo-content">
-                    <h3>Flat 50% Off</h3>
-                    <p>On all Dairy Products!</p>
-                </div>
-                <img class="promo-image" src="https://rukminim2.flixcart.com/fk-p-flap/960/160/image/02cd5eda98fe68a7.jpg?q=60" alt="Dairy Offer">
-            </a>
-            <a href="#" class="promo-card dark-theme">
-                <div class="promo-content">
-                    <h3>Free Delivery!</h3>
-                    <p>On all orders above ₹199</p>
-                </div>
-                <img class="promo-image" src="https://imgs.search.brave.com/M6L-k4z6h3h6i_m7X4fK9w3Q4-y8g9Z4dG1Wn9T10vY/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9pbWFn/ZXMtcG5nLmdyYXZp/dHljaGVhdC5jb20v/MjAyMC8wNC9kZWxp/dmVyeS1tYW4tY2Fy/dG9vbi0xLWQ2b3c4/c2xrb2QucG5n" alt="Delivery Guy">
-            </a>
-            <a href="#" class="promo-card">
-                <div class="promo-content">
-                    <h3>Weekend Flash Sale</h3>
-                    <p>Save up to 40% on essentials</p>
-                </div>
-                <img class="promo-image" src="https://imgs.search.brave.com/R3U0pG2p6XjV8n7J9W4u8M3W3m-8fG3m4g0j4n9m3g0/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9jZG4u/dmVjdG9yc3RvY2su/Y29tL3iLcHJldmll/dy0xLzExLzE5L3Jl/ZGV4LXNhbGUtdGFn/LWZyZWUtY2Fycm93/LTE3MTExOS5qcGc" alt="Sale Tag">
-            </a>
-        </div>
-    </section>
+<section>
+    <div class="section-header">
+        <h2>Kepto Specials</h2>
+        <a href="#">See All Offers</a>
+    </div>
+    <div class="scroll-banner">
+        {% for product in specials %}
+        <a href="{% url 'product_detail' product.slug %}" class="promo-card">
+            <div class="promo-content">
+                <h3>{{ product.name }}</h3>
+                <p>₹{{ product.price }}</p>
+            </div>
+            <img class="promo-image" src="{{ product.image.url|default:'https://via.placeholder.com/150' }}" alt="{{ product.name }}">
+        </a>
+        {% empty %}
+        <p>No special offers right now.</p>
+        {% endfor %}
+    </div>
+</section>
 
-    <section>
-        <div class="section-header">
-            <h2>Shop By Category</h2>
-            <a href="#">View All</a>
-        </div>
-        <div class="category-grid">
-            <a href="#" class="category">
-                <div class="category-icon">
-                    <img src="https://cdn-icons-png.flaticon.com/512/3228/3228062.png" alt="Vegetables">
-                </div>
-                <span class="category-name">Fruits & Veg</span>
-            </a>
-            <a href="#" class="category">
-                <div class="category-icon">
-                    <img src="https://cdn-icons-png.flaticon.com/512/3081/3081640.png" alt="Dairy">
-                </div>
-                <span class="category-name">Dairy</span>
-            </a>
-            <a href="#" class="category">
-                <div class="category-icon">
-                    <img src="https://cdn-icons-png.flaticon.com/512/3429/3429391.png" alt="Snacks">
-                </div>
-                <span class="category-name">Munchies</span>
-            </a>
-            <a href="#" class="category">
-                <div class="category-icon">
-                    <img src="https://cdn-icons-png.flaticon.com/512/3050/3050228.png" alt="Beverages">
-                </div>
-                <span class="category-name">Drinks</span>
-            </a>
-            <a href="#" class="category">
-                <div class="category-icon">
-                    <img src="https://cdn-icons-png.flaticon.com/512/751/751717.png" alt="Home">
-                </div>
-                <span class="category-name">Home Care</span>
-            </a>
-            <a href="#" class="category">
-                <div class="category-icon">
-                    <img src="https://cdn-icons-png.flaticon.com/512/179/179261.png" alt="Personal Care">
-                </div>
-                <span class="category-name">Personal Care</span>
-            </a>
-             <a href="#" class="category">
-                <div class="category-icon">
-                    <img src="https://cdn-icons-png.flaticon.com/512/815/815857.png" alt="Meat">
-                </div>
-                <span class="category-name">Meat</span>
-            </a>
-        </div>
-    </section>
+<section>
+    <div class="section-header">
+        <h2>Shop By Category</h2>
+        <a href="#">View All</a>
+    </div>
+    <div class="category-grid">
+        {% for cat in categories %}
+        <a href="{% url 'category_detail' cat.slug %}" class="category">
+            <div class="category-icon">
+                <img src="{{ cat.icon.url|default:'https://via.placeholder.com/80' }}" alt="{{ cat.name }}">
+            </div>
+            <span class="category-name">{{ cat.name }}</span>
+        </a>
+        {% empty %}
+        <p>No categories available.</p>
+        {% endfor %}
+    </div>
+</section>
 
-    <section>
-        <div class="section-header">
-            <h2>Hot Deals</h2>
-            <a href="#">More</a>
-        </div>
-        <div class="scroll-container">
-            <div class="product-grid">
-                <div class="product">
-                    <img src="https://via.placeholder.com/150" alt="">
-                    <h4>Organic Sugar</h4>
-                    <p>1kg pack</p>
-                    <div class="price">
-                        <span>₹45</span>
-                        <button>ADD</button>
-                    </div>
-                </div>
-                <div class="product">
-                    <img src="https://via.placeholder.com/150" alt="">
-                    <h4>Whole Wheat Flour</h4>
-                    <p>5kg pack</p>
-                    <div class="price">
-                        <span>₹220</span>
-                        <button>ADD</button>
-                    </div>
+{% for category in categories %}
+<section>
+    <div class="section-header">
+        <h2>{{ category.name }}</h2>
+        <a href="{% url 'category_detail' category.slug %}">More</a>
+    </div>
+    <div class="scroll-container">
+        <div class="product-grid">
+            
+            {% for product in category.limited_products %}
+            <div class="product">
+                <a href="{% url 'product_detail' product.slug %}">
+                    <img src="{{ product.image.url|default:'https://via.placeholder.com/150' }}" alt="{{ product.name }}">
+                </a>
+                <h4>{{ product.name }}</h4>
+                <p>{{ product.description|default:"" }}</p>
+                <div class="price">
+                    {% if product.old_price %}
+                        <span class="old-price">₹{{ product.old_price }}</span>
+                    {% endif %}
+                    <span>₹{{ product.price }}</span>
+                    <button class="add-btn" data-product-id="{{ product.id }}">ADD</button>
                 </div>
             </div>
-        </div>
-    </section>
-
-    <section>
-        <div class="section-header">
-            <h2>Daily Fresh</h2>
-            <a href="#">More</a>
-        </div>
-        <div class="scroll-container">
-            <div class="product-grid">
-                <div class="product">
-                    <img src="https://imgs.search.brave.com/_rWrNt4EMBSJWuvk5kJ4Mom6ZjuCmX8B32TSw1FZveU/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly93d3cu/ZnJ1aXRzbWl0aC5j/b20vcHViL21lZGlh/L3d5c2l3eWcvdG9w/LXZpZXctYnVuY2gt/YmFuYW5hcy13b29k/LWN1dHRpbmctYm9h/cmQtcHVycGxlLXdv/b2RfMTQxNzkzLTcy/ODIuanBn"
-                        alt="Banana">
-                    <h4>Banana</h4>
-                    <p>6 pcs</p>
-                    <div class="price">
-                        <span>₹45</span>
-                        <button>ADD</button>
-                    </div>
-                </div>
-                <div class="product">
-                    <img src="https://via.placeholder.com/150"
-                        alt="Pineapple">
-                    <h4>Pineapple</h4>
-                    <p>1 pc</p>
-                    <div class="price">
-                        <span>₹60</span>
-                        <button>ADD</button>
-                    </div>
-                </div>
-                <div class="product">
-                    <img src="https://via.placeholder.com/150" alt="Pineapple">
-                    <h4>Pineapple</h4>
-                    <p>1 pc</p>
-                    <div class="price">
-                        <span>₹60</span>
-                        <button>ADD</button>
-                    </div>
-                </div>
-                <div class="product">
-                    <img src="https://via.placeholder.com/150" alt="Pineapple">
-                    <h4>Pineapple</h4>
-                    <p>1 pc</p>
-                    <div class="price">
-                        <span>₹60</span>
-                        <button>ADD</button>
-                    </div>
-                </div>
-                <div class="product">
-                    <img src="https://via.placeholder.com/150" alt="Pineapple">
-                    <h4>Pineapple</h4>
-                    <p>1 pc</p>
-                    <div class="price">
-                        <span>₹60</span>
-                        <button>ADD</button>
-                    </div>
-                </div>
-                <div class="product">
-                    <img src="https://via.placeholder.com/150" alt="Pineapple">
-                    <h4>Pineapple</h4>
-                    <p>1 pc</p>
-                    <div class="price">
-                        <span>₹60</span>
-                        <button>ADD</button>
-                    </div>
-                </div>
+            {% empty %}
+            <p>No products in this category.</p>
+            {% endfor %}
             </div>
-        </div>
-    </section>
-
-    <section>
-        <div class="section-header">
-            <h2>Sexual product</h2>
-            <a href="#">More</a>
-        </div>
-        <div class="scroll-container">
-            <div class="product-grid">
-                <div class="product">
-                    <img src="https://via.placeholder.com/150"
-                        alt="Condom">
-                    <h4>Condom</h4>
-                    <p>6 pcs</p>
-                    <div class="price">
-                        <span>₹45</span>
-                        <button>ADD</button>
-                    </div>
-                </div>
-                <div class="product">
-                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRZI5tClJWtvaPzThvt31E0VeN3p0gMv41hLQ&s"
-                        alt="dilay Spray">
-                    <h4>Dilay spary</h4>
-                    <p>1 pc</p>
-                    <div class="price">
-                        <span>₹60</span>
-                        <button>ADD</button>
-                    </div>
-                </div>
-                <div class="product">
-                    <img src="https://s.alicdn.com/@sc04/kf/H65f0b2f638ca415ab62a53c600fbb0276/Adult-Woman-Av-Heating-Dual-Head-Dildo-10-Mode-Vibrating-Sex-Products-Massager-G-Spot-Sex-Toys-Vibrator.jpg_300x300.jpg" alt="massage">
-                    <h4>Massage</h4>
-                    <p>1 pc</p>
-                    <div class="price">
-                        <span>₹60</span>
-                        <button>ADD</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+    </div>
+</section>
+{% endfor %}
 
 {% endblock content %}
