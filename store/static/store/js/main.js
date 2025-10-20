@@ -1,3 +1,5 @@
+// static/store/js/main.js (Updated Code)
+
 document.addEventListener('DOMContentLoaded', () => {
 
     // 1. Search Bar Focus/Blur Logic
@@ -26,19 +28,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // --- 3. "ADD" BUTTON FUNCTIONALITY (NEW) ---
-    // Select all buttons with the class 'add-btn'
-    const addButtons = document.querySelectorAll('.add-btn');
-
-    addButtons.forEach(button => {
-        button.addEventListener('click', (event) => {
-            const productId = event.target.dataset.productId;
-            
-            // Placeholder action: Show a simple alert
-            alert(`Product (ID: ${productId}) added to cart! (This is a demo)`);
-            
-            // You can replace the alert with a real AJAX call to your Django backend
-            // to add the product to the user's cart session.
-        });
-    });
 });

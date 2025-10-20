@@ -45,8 +45,9 @@
                         {% endif %}
                         ₹{{ product.price }}
                     </div>
-                    <button class="add-btn">ADD</button>
-                </div>
+                    
+                    <a href="{% url 'add_to_cart' product.id %}" class="add-btn">ADD</a>
+                    </div>
             </div>
             {% empty %}
             <p>No products available in this category.</p>

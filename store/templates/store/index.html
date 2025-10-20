@@ -69,8 +69,9 @@
                         <span class="old-price">₹{{ product.old_price }}</span>
                     {% endif %}
                     <span>₹{{ product.price }}</span>
-                    <button class="add-btn" data-product-id="{{ product.id }}">ADD</button>
-                </div>
+                    
+                    <a href="{% url 'add_to_cart' product.id %}" class="add-btn">ADD</a>
+                    </div>
             </div>
             {% empty %}
             <p>No products in this category.</p>

@@ -207,7 +207,7 @@ section h2 {
     color: #00a94f;
 }
 
-.price button {
+.price .add-btn {
     background-color: #00a94f;
     color: #fff;
     border: none;
@@ -215,4 +215,10 @@ section h2 {
     padding: 5px 10px;
     font-size: 0.8rem;
     cursor: pointer;
+    text-decoration: none; /* Sabse zaroori: Link ka underline hatane ke liye */
+    transition: background-color 0.2s ease;
+}
+
+.price .add-btn:hover {
+    background-color: #008a3f; /* Thoda dark green color */
 }

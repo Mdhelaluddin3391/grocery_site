@@ -1,3 +1,5 @@
+/* static/store/css/base.css (FULLY UPDATED) */
+
 /* ====== GLOBAL ====== */
 * {
     margin: 0;
@@ -11,7 +13,7 @@ body {
     color: #333;
 }
 
-/* Scrollbar styles for all scrollable sections - Included here as a general fix */
+/* Scrollbar styles for all scrollable sections */
 .top-category-bar::-webkit-scrollbar,
 .scroll-banner::-webkit-scrollbar,
 .category-grid::-webkit-scrollbar,
@@ -24,7 +26,6 @@ section {
     padding: 20px;
 }
 
-/* Adjust padding for the section below the header */
 section:first-of-type {
     padding-top: 10px;
 }
@@ -51,13 +52,11 @@ header {
     color: #00a94f;
 }
 
-/* Is code ko delete kar dein */
-/* === YEH NAYA AUR BEHTAR CODE ADD KAREIN === */
 .logo-link, .logo-link:hover {
-    text-decoration: none !important; /* Underline ko force karke hatata hai */
-    border-bottom: none !important;   /* Agar galti se border hai, toh use bhi hatata hai */
+    text-decoration: none !important;
+    border-bottom: none !important;
 }
-/* ========================================= */
+
 .location {
     font-size: 0.9rem;
     color: #777;
@@ -69,6 +68,38 @@ header {
     align-items: center;
     gap: 15px;
 }
+
+.icons a {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    transition: opacity 0.2s ease;
+}
+
+.icons a:hover {
+    opacity: 0.8;
+}
+
+/* ================== CSS FOR CART COUNT ADDED HERE ================== */
+/* This makes the cart link a container for the count badge */
+.cart-link {
+    position: relative;
+}
+
+/* This styles the red circle (the count badge) */
+.cart-count {
+    position: absolute; 
+    top: -5px; 
+    right: -8px; 
+    background-color: #e74c3c; 
+    color: white; 
+    border-radius: 50%; 
+    padding: 1px 6px; 
+    font-size: 11px; 
+    font-weight: bold;
+    border: 1px solid white;
+}
+/* =================================================================== */
 
 .icons img {
     width: 25px;
@@ -148,7 +179,6 @@ header {
 
 
 /* ====== FOOTER ====== */
-
 footer {
     background-color: #f8f8f8;
     color: #333;

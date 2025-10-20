@@ -1,0 +1,17 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Log In{% endblock title %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 40px auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+    <h2>Log In to Your Account</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" style="width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px;">Log In</button>
+    </form>
+    <p style="text-align: center; margin-top: 15px;">
+        Don't have an account? <a href="{% url 'register' %}">Sign Up</a>
+    </p>
+</div>
+{% endblock content %}

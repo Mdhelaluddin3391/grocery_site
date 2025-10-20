@@ -27,8 +27,7 @@
                 {% endif %}
             </div>
 
-            <button class="add-to-cart-btn add-btn" data-product-id="{{ product.id }}">ADD TO CART</button>
-
+            <a href="{% url 'add_to_cart' product.id %}" class="add-to-cart-btn add-btn">ADD TO CART</a>
             <div class="product-description">
                 <h3>Description</h3>
                 <p>{{ product.description|default:"No description available for this product."|linebreaks }}</p>
@@ -50,8 +49,9 @@
                     <p>{{ prod.quantity|default:"" }}</p>
                     <div class="price">
                         <span>₹{{ prod.price }}</span>
-                        <button class="add-btn" data-product-id="{{ prod.id }}">ADD</button>
-                    </div>
+                        
+                        <a href="{% url 'add_to_cart' prod.id %}" class="add-btn">ADD</a>
+                        </div>
                 </div>
                 {% endfor %}
             </div>
