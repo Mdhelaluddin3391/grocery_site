@@ -18,29 +18,31 @@
                 <a href="{% url 'home' %}" class="logo-link"><span class="logo">QuickDash</span></a>
                 <span class="location">Delivery in 8 minutes • Dharmanagar</span>
             </div>
-            
             <div class="icons">
                 <a href="{% url 'view_cart' %}" class="cart-link" title="Cart">
                     <img src="https://cdn-icons-png.flaticon.com/512/263/263142.png" alt="Cart Icon">
-                    
+
                     {% if cart_item_count > 0 %}
-                        <span class="cart-count">
-                            {{ cart_item_count }}
-                        </span>
+                    <span class="cart-count">
+                        {{ cart_item_count }}
+                    </span>
                     {% endif %}
                 </a>
-                
+
                 {% if user.is_authenticated %}
-                    <a href="{% url 'logout' %}" title="Logout ({{ user.username }})">
-                        <img src="https://cdn-icons-png.flaticon.com/512/1828/1828479.png" alt="Logout Icon">
-                    </a>
+                {# This link now points to the profile page #}
+                <a href="{% url 'profile' %}" title="My Profile ({{ user.username }})">
+                    <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Profile Icon">
+                </a>
                 {% else %}
-                    <a href="{% url 'login' %}" title="Login / Register">
-                        <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Profile Icon">
-                    </a>
+                <a href="{% url 'login' %}" title="Login / Register">
+                    <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Profile Icon">
+                </a>
                 {% endif %}
             </div>
-            </div>
+
+
+        </div>
         <div class="search-bar">
             <input type="text" placeholder="Search for items" />
         </div>

@@ -4,79 +4,180 @@
 {% block title %}Your Shopping Cart{% endblock title %}
 
 {% block extra_css %}
-<style>
-    /* CSS code wahi hai jo aapne diya tha, bas thoda sa container ke liye adjustment kiya hai */
-    .cart-container {
-        max-width: 900px;
-        margin: 20px auto;
-        background: #fff;
-        padding: 30px;
-        border-radius: 8px;
-        box-shadow: 0 0 15px rgba(0,0,0,0.1);
-    }
-    h1 { text-align: center; color: #2c3e50; margin-bottom: 20px; }
-    .cart-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-    .cart-table th, .cart-table td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; vertical-align: middle;}
-    .cart-table th { background-color: #f2f2f2; }
-    .product-info { display: flex; align-items: center; }
-    .product-info img { width: 60px; height: 60px; margin-right: 15px; border-radius: 5px; object-fit: contain; }
-    .remove-btn { color: #e74c3c; text-decoration: none; font-weight: bold; }
-    .remove-btn:hover { text-decoration: underline; }
-    .cart-summary { text-align: right; }
-    .cart-summary h2 { font-size: 1.5em; color: #2c3e50; }
-    .empty-cart { text-align: center; padding: 40px 20px; }
-    .empty-cart p { font-size: 1.2em; margin-bottom: 20px; }
-    .btn { display: inline-block; background: #3498db; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; transition: background 0.3s; }
-    .btn-checkout { background: #2ecc71; }
-    .btn:hover { opacity: 0.9; }
-</style>
+    {# Aapka saara CSS yahan waisa hi rahega #}
+    <style>
+    /* ... All your previous CSS goes here ... */
+    .cart-page-container { max-width: 1200px; margin: 20px auto; padding: 20px; background-color: transparent; }
+    .cart-page-container h1 { font-size: 1.8rem; font-weight: 600; margin-bottom: 25px; color: #333; }
+    .cart-layout { display: flex; flex-direction: row; gap: 30px; align-items: flex-start; }
+    .cart-items-list { flex: 1 1 65%; display: flex; flex-direction: column; gap: 15px; }
+    .cart-item-card { display: flex; align-items: center; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); gap: 15px; transition: opacity 0.3s ease; }
+    .cart-item-card .item-image img { width: 80px; height: 80px; object-fit: contain; border-radius: 8px; background-color: #f9f9f9; }
+    .cart-item-card .item-details { flex-grow: 1; }
+    .item-details .item-name { font-weight: 600; font-size: 1rem; margin: 0 0 4px 0; }
+    .item-details .item-price { font-size: 0.9rem; color: #888; }
+    .item-actions { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .quantity-selector { display: flex; align-items: center; border: 1px solid #ddd; border-radius: 6px; }
+    .quantity-btn { background: #f5f5f5; border: none; padding: 6px 12px; cursor: pointer; font-size: 1rem; font-weight: bold; text-decoration: none; color: #333; }
+    .quantity-btn:first-child { border-radius: 5px 0 0 5px; }
+    .quantity-btn:last-child { border-radius: 0 5px 5px 0; }
+    .quantity-value { padding: 6px 15px; font-weight: 500; }
+    .item-subtotal { font-weight: 600; font-size: 1.1rem; min-width: 80px; text-align: right; }
+    .remove-btn { font-size: 0.9rem; font-weight: 500; color: #fff; background-color: #e74c3c; text-decoration: none; padding: 5px 12px; border-radius: 5px; transition: background-color 0.2s; border: none; cursor: pointer; }
+    .remove-btn:hover { background-color: #c0392b; text-decoration: none; }
+    .order-summary-card { flex: 1 1 35%; background: #fff; padding: 25px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: sticky; top: 90px; }
+    .order-summary-card h3 { margin: 0 0 20px 0; font-size: 1.2rem; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+    .summary-row { display: flex; justify-content: space-between; margin-bottom: 15px; color: #555; }
+    .summary-row.savings { color: #28a745; font-weight: 500; }
+    .summary-row.total { font-weight: bold; font-size: 1.2rem; color: #000; margin-top: 10px; }
+    .order-summary-card hr { border: 0; border-top: 1px solid #eee; margin: 20px 0; }
+    .checkout-btn { width: 100%; background-color: #28a745; color: #fff; border: none; padding: 12px; font-size: 1rem; font-weight: 600; border-radius: 8px; cursor: pointer; transition: background-color 0.2s ease; }
+    .checkout-btn:hover { background-color: #218838; }
+    .empty-cart-container { display: none; }
+    .empty-cart { text-align: center; padding: 60px 20px; background: #fff; border-radius: 10px; }
+    .empty-cart img { width: 100px; margin-bottom: 20px; opacity: 0.6; }
+    .empty-cart p { font-size: 1.2em; color: #555; margin-bottom: 20px; }
+    .btn { display: inline-block; background: #00a94f; color: #fff; padding: 12px 25px; text-decoration: none; border-radius: 5px; transition: background 0.3s; font-weight: 500; }
+    @media (max-width: 992px) { .cart-layout { flex-direction: column; } .order-summary-card { position: static; width: 100%; } }
+    @media (max-width: 576px) { .cart-item-card { flex-wrap: wrap; padding: 15px; } .item-details { flex-basis: 100%; order: 1; text-align: center; margin-bottom: 15px; } .item-image { order: 2; flex-grow: 1; text-align: left; } .item-actions { order: 3; flex-grow: 1; } .item-subtotal { display: none; } }
+    </style>
 {% endblock extra_css %}
 
 {% block content %}
-<div class="cart-container">
-    <h1>🛒 Your Shopping Cart</h1>
-
-    {% if cart_items %}
-        <table class="cart-table">
-            <thead>
-                <tr>
-                    <th>Product</th>
-                    <th>Price</th>
-                    <th>Quantity</th>
-                    <th>Subtotal</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in cart_items %}
-                <tr>
-                    <td>
-                        <div class="product-info">
-                            {% if item.product.image %}
-                                <img src="{{ item.product.image }}" alt="{{ item.product.name }}">
-                            {% endif %}
-                            <span>{{ item.product.name }}</span>
+    {# Aapka saara HTML yahan waisa hi rahega #}
+<div class="cart-page-container">
+    <div id="cart-content-wrapper" {% if not cart.items.all %}style="display: none;"{% endif %}>
+        <h1 id="cart-title">🛒 Your Cart ({{ cart.get_total_items }} item{{ cart.get_total_items|pluralize }})</h1>
+        <div class="cart-layout">
+            <div class="cart-items-list">
+                {% for item in cart.items.all %}
+                <div class="cart-item-card" id="cart-item-{{ item.id }}">
+                    <div class="item-image"><img src="{{ item.product.image|default:'https://via.placeholder.com/80' }}" alt="{{ item.product.name }}"></div>
+                    <div class="item-details">
+                        <p class="item-name">{{ item.product.name }}</p>
+                        <p class="item-price">₹{{ item.product.price }}</p>
+                    </div>
+                    <div class="item-actions">
+                        <div class="quantity-selector">
+                            <button class="quantity-btn" data-action="decrement" data-item-id="{{ item.id }}">-</button>
+                            <span class="quantity-value" id="quantity-{{ item.id }}">{{ item.quantity }}</span>
+                            <button class="quantity-btn" data-action="increment" data-item-id="{{ item.id }}">+</button>
                         </div>
-                    </td>
-                    <td>₹{{ item.product.price }}</td>
-                    <td>{{ item.quantity }}</td>
-                    <td>₹{{ item.get_subtotal }}</td>
-                    <td><a href="{% url 'remove_from_cart' item.id %}" class="remove-btn">Remove</a></td>
-                </tr>
+                    </div>
+                    <div class="item-subtotal">₹<span id="subtotal-{{ item.id }}">{{ item.get_subtotal|floatformat:2 }}</span></div>
+                    <a href="{% url 'remove_from_cart' item.id %}" class="remove-btn">Remove</a>
+                </div>
                 {% endfor %}
-            </tbody>
-        </table>
-
-        <div class="cart-summary">
-            <h2>Total: ₹{{ total_price }}</h2>
-            <a href="#" class="btn btn-checkout">Proceed to Checkout</a>
+            </div>
+            <div class="order-summary-card">
+                <h3>Price Details</h3>
+                <div class="summary-row">
+                    <span>Price (<span id="summary-item-count">{{ cart.get_total_items }}</span> items)</span>
+                    <span>₹<span id="summary-subtotal">{{ cart.get_subtotal|floatformat:2 }}</span></span>
+                </div>
+                <div class="summary-row">
+                    <span>Discount</span>
+                    <span>- ₹<span id="summary-discount">{{ cart.discount_amount|floatformat:2 }}</span></span>
+                </div>
+                <div class="summary-row">
+                    <span>Delivery Charges</span>
+                    <span>+ ₹<span id="summary-delivery">{{ cart.delivery_charge|floatformat:2 }}</span></span>
+                </div>
+                <hr>
+                <div class="summary-row total">
+                    <span>Total Amount</span>
+                    <span>₹<span id="summary-grand-total">{{ cart.get_grand_total|floatformat:2 }}</span></span>
+                </div>
+                <button class="checkout-btn">Proceed to Checkout</button>
+            </div>
         </div>
-
-    {% else %}
+    </div>
+    <div id="empty-cart-container" {% if cart.items.all %}style="display: none;"{% endif %}>
         <div class="empty-cart">
-            <p>Your cart is empty.</p>
+            <img src="https://cdn-icons-png.flaticon.com/512/2762/2762885.png" alt="Empty Cart">
+            <p>Your shopping cart looks a little empty.</p>
             <a href="{% url 'home' %}" class="btn">Continue Shopping</a>
         </div>
-    {% endif %}
+    </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.quantity-btn').forEach(button => {
+        // 'event' object ko yahan access karein
+        button.addEventListener('click', (event) => { 
+            
+            // --- YEH HAI SABSE ZAROORI LINE ---
+            event.preventDefault(); // Browser ko page reload karne se roko
+
+            const action = button.dataset.action;
+            const itemId = button.dataset.itemId;
+            let url = '';
+
+            if (action === 'increment') {
+                url = `/cart/increment/${itemId}/`;
+            } else if (action === 'decrement') {
+                url = `/cart/decrement/${itemId}/`;
+            } else {
+                return; // Agar koi aur action hai to kuch na karein
+            }
+
+            fetch(url, {
+                method: 'GET', // Method GET hi rahega kyonki view GET request expect kar raha hai
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.item_removed) {
+                    const itemCard = document.getElementById(`cart-item-${data.item_id}`);
+                    if (itemCard) {
+                        itemCard.style.opacity = '0';
+                        setTimeout(() => itemCard.remove(), 300);
+                    }
+                } else {
+                    document.getElementById(`quantity-${itemId}`).textContent = data.item_quantity;
+                    document.getElementById(`subtotal-${itemId}`).textContent = data.item_subtotal.toFixed(2);
+                }
+
+                // Saari summary values ko update karein
+                document.getElementById('summary-subtotal').textContent = data.cart_subtotal.toFixed(2);
+                document.getElementById('summary-grand-total').textContent = data.cart_grand_total.toFixed(2);
+                document.getElementById('summary-item-count').textContent = data.cart_item_count;
+                
+                // Pluralization ke liye cart title bhi update karein
+                const itemText = data.cart_item_count === 1 ? ' item' : ' items';
+                document.getElementById('cart-title').textContent = `🛒 Your Cart (${data.cart_item_count}${itemText})`;
+
+                // Header mein cart count update karein
+                const headerCartCount = document.querySelector('.cart-count');
+                if (headerCartCount) {
+                    if (data.cart_item_count > 0) {
+                        headerCartCount.textContent = data.cart_item_count;
+                        headerCartCount.style.display = 'inline-block';
+                    } else {
+                        headerCartCount.style.display = 'none';
+                    }
+                }
+
+                // Check karein ki cart khali ho gaya hai ya nahi
+                if (data.cart_item_count === 0) {
+                    document.getElementById('cart-content-wrapper').style.display = 'none';
+                    document.getElementById('empty-cart-container').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('There has been a problem with your fetch operation:', error);
+            });
+        });
+    });
+});
+</script>
+
 {% endblock content %}
