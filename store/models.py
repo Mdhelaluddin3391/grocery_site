@@ -16,6 +16,7 @@ class Category(models.Model):
     icon = models.URLField(blank=True, null=True)
     show_on_homepage = models.BooleanField(default=True)
     order = models.PositiveIntegerField(default=0)
+    sales_priority = models.IntegerField(default=0, help_text="Higher number means higher priority on homepage")
 
     class Meta:
         ordering = ['order']

@@ -1,12 +1,10 @@
 # cart/views.py
-
-from django.http import JsonResponse # Yeh import add karein
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Cart, CartItem
 from store.models import Product
 from django.contrib.auth.decorators import login_required
 from store.views import get_main_categories
-
 # ... add_to_cart, view_cart, remove_from_cart views waise hi rahenge ...
 
 @login_required
@@ -18,8 +16,13 @@ def add_to_cart(request, product_id):
     if not created:
         cart_item.quantity += 1
     cart_item.save()
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({'cart_item_count': cart.get_total_items()})
     
     return redirect(request.META.get('HTTP_REFERER', 'home'))
+
+
 
 @login_required
 def view_cart(request):

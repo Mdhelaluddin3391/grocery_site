@@ -2,29 +2,57 @@
 
 from django.shortcuts import render, get_object_or_404
 from .models import Category, Product
+from django.core.paginator import Paginator
+from django.http import JsonResponse
+from django.template.loader import render_to_string
 
 def get_main_categories():
     """Helper function to get main categories for the header."""
+    # Yeh "Shop by Category" ke liye hai, yeh poora load hoga
     return Category.objects.filter(parent=None)
 
 def index(request):
-    # 'prefetch_related' se performance behtar hoti hai
-    categories = Category.objects.filter(show_on_homepage=True, parent=None).prefetch_related('products')
-    specials = Product.objects.filter(is_special=True)
-
-    # Har category ke products ko view mein hi limit kar dein
-    for category in categories:
-        # Har category object ke saath ek naya attribute 'limited_products' jod do
-        # Jismein sirf pehle 10 products honge
+    # Yeh neeche waale PRODUCT SECTIONS ke liye hai, is par lazy loading lagegi
+    all_categories = Category.objects.filter(show_on_homepage=True, parent=None).prefetch_related('products')
+    
+    paginator = Paginator(all_categories, 4) 
+    page_number = request.GET.get('page')
+    categories_page = paginator.get_page(page_number)
+    
+    for category in categories_page:
         category.limited_products = category.products.all()[:10]
 
+    specials = Product.objects.filter(is_special=True)
+
     return render(request, 'store/index.html', {
-        'categories': categories,
+        'categories': categories_page, # Yeh lazy loaded hain
         'specials': specials,
-        'main_categories': get_main_categories(), # Header ke liye
+        'main_categories': get_main_categories(), # Yeh poore load honge
+        'has_more_pages': categories_page.has_next(),
     })
 
+def load_more_categories(request):
+    all_categories = Category.objects.filter(show_on_homepage=True, parent=None).prefetch_related('products')
+    paginator = Paginator(all_categories, 4)
+    page_number = int(request.GET.get('page', 1))
+    
+    if page_number > paginator.num_pages:
+        return JsonResponse({'html': '', 'has_more': False})
 
+    categories_page = paginator.get_page(page_number)
+    
+    for category in categories_page:
+        category.limited_products = category.products.all()[:10]
+        
+    html = render_to_string(
+        'store/partials/_category_section.html', 
+        {'categories': categories_page}
+    )
+    
+    return JsonResponse({'html': html, 'has_more': categories_page.has_next()})
+
+
+# Baaki ke views waise hi rahenge
 def category_detail(request, slug):
     category = get_object_or_404(Category, slug=slug)
 
@@ -43,7 +71,7 @@ def category_detail(request, slug):
         'category': category,
         'products': products,
         'subcategories': subcategories,
-        'main_categories': get_main_categories(), # Header ke liye
+        'main_categories': get_main_categories(),
     }
     return render(request, 'store/category_detail.html', context)
 
@@ -55,6 +83,6 @@ def product_detail(request, slug):
     context = {
         'product': product,
         'related_products': related_products,
-        'main_categories': get_main_categories(), # Header ke liye
+        'main_categories': get_main_categories(),
     }
     return render(request, 'store/product_detail.html', context)

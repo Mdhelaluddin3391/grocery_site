@@ -1,0 +1,32 @@
+{% for category in categories %}
+<section>
+    <div class="section-header">
+        <h2>{{ category.name }}</h2>
+        <a href="{% url 'category_detail' category.slug %}">More</a>
+    </div>
+    <div class="scroll-container">
+        <div class="product-grid">
+            
+            {% for product in category.limited_products %}
+            <div class="product">
+                <a href="{% url 'product_detail' product.slug %}">
+                    <img src="{{ product.image.url|default:'https://via.placeholder.com/150' }}" alt="{{ product.name }}">
+                </a>
+                <h4>{{ product.name }}</h4>
+                <p>{{ product.description|default:"" }}</p>
+                <div class="price">
+                    {% if product.old_price %}
+                        <span class="old-price">₹{{ product.old_price }}</span>
+                    {% endif %}
+                    <span>₹{{ product.price }}</span>
+                    
+                    <a href="{% url 'add_to_cart' product.id %}" class="add-btn">ADD</a>
+                    </div>
+            </div>
+            {% empty %}
+            <p>No products in this category.</p>
+            {% endfor %}
+            </div>
+    </div>
+</section>
+{% endfor %}
