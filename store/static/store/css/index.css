@@ -222,3 +222,19 @@ section h2 {
 .price .add-btn:hover {
     background-color: #008a3f; /* Thoda dark green color */
 }
+
+
+/* ====== END OF LIST MESSAGE STYLES ====== */
+#end-of-list-message {
+    background-color: #f7f9fa;
+    border-radius: 12px;
+    margin: 20px;
+    opacity: 0; /* Shuruaat mein chhupa hua */
+    transform: translateY(20px); /* Thoda neeche se aayega */
+    transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out; /* Animation ke liye */
+}
+
+#end-of-list-message.visible {
+    opacity: 1;
+    transform: translateY(0);
+}

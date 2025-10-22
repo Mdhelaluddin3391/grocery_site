@@ -1,4 +1,4 @@
-// static/store/js/main.js (FINAL CORRECTED CODE)
+// static/store/js/main.js (FINAL UPDATED CODE)
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -44,9 +44,20 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .then(data => {
                 const cartCountSpan = document.querySelector('.cart-count');
-                if (cartCountSpan && data.cart_item_count !== undefined) {
-                    cartCountSpan.textContent = data.cart_item_count;
-                    cartCountSpan.style.display = data.cart_item_count > 0 ? 'inline-block' : 'none';
+                // Create the span if it doesn't exist
+                let countSpan = cartCountSpan;
+                if (!countSpan) {
+                    const cartLink = document.querySelector('.cart-link');
+                    if(cartLink) {
+                        countSpan = document.createElement('span');
+                        countSpan.className = 'cart-count';
+                        cartLink.appendChild(countSpan);
+                    }
+                }
+                
+                if (countSpan && data.cart_item_count !== undefined) {
+                    countSpan.textContent = data.cart_item_count;
+                    countSpan.style.display = data.cart_item_count > 0 ? 'inline-block' : 'none';
                 }
             })
             .catch(error => {
@@ -56,22 +67,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 4. Lazy Loading for Product Sections
+    // 4. Lazy Loading for Product Sections (UPDATED LOGIC)
     const loadMoreTrigger = document.getElementById('load-more-trigger');
     const categoryContainer = document.getElementById('category-container');
     const loadingText = document.querySelector('.loading-text');
 
-    if (categoryContainer) {
+    if (categoryContainer && loadMoreTrigger) {
         let page = 2;
         let isLoading = false;
         let hasMore = categoryContainer.dataset.hasMore === 'true';
 
         const loadMoreCategories = () => {
             if (isLoading || !hasMore) {
-                if(!hasMore && loadingText) {
-                    loadingText.style.display = 'block';
-                    loadingText.textContent = 'Bas, itne hi products hain!';
-                }
                 return;
             }
 
@@ -90,23 +97,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 .catch(error => console.error('Error loading more categories:', error))
                 .finally(() => {
                     isLoading = false;
-                    if (loadingText && hasMore) {
-                         loadingText.style.display = 'none';
-                    } else if (!hasMore && loadingText) {
-                        loadingText.textContent = 'Bas, itne hi products hain!';
+                    if (loadingText) {
+                        // Loading text ko hamesha chhupa dein
+                        loadingText.style.display = 'none';
+                    }
+                    
+                    if (!hasMore) {
+                        // Trigger ko hi remove kar dein
+                        loadMoreTrigger.style.display = 'none';
+
+                        // Humara naya stylish message dikhayein
+                        const endMessage = document.getElementById('end-of-list-message');
+                        if (endMessage) {
+                            endMessage.style.display = 'block';
+                            // Animation ke liye thoda sa delay add karein
+                            setTimeout(() => {
+                                endMessage.classList.add('visible');
+                            }, 50);
+                        }
                     }
                 });
         };
 
-        if (loadMoreTrigger) {
-            const observer = new IntersectionObserver((entries) => {
-                if (entries[0].isIntersecting) {
-                    loadMoreCategories();
-                }
-            }, {
-                threshold: 0.1
-            });
-            observer.observe(loadMoreTrigger);
-        }
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                loadMoreCategories();
+            }
+        }, {
+            threshold: 0.1
+        });
+        observer.observe(loadMoreTrigger);
     }
 });
