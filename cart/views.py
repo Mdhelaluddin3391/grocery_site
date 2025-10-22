@@ -1,10 +1,12 @@
 # cart/views.py
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Cart, CartItem
+from .models import Cart, CartItem, Order, OrderItem
 from store.models import Product
 from django.contrib.auth.decorators import login_required
 from store.views import get_main_categories
+from django.db import transaction
+
 # ... add_to_cart, view_cart, remove_from_cart views waise hi rahenge ...
 
 @login_required
@@ -89,3 +91,53 @@ def decrement_cart_item(request, item_id):
         'item_id': item_id
     })
     return JsonResponse(cart_data)
+
+# --- CHECKOUT VIEW ---
+
+@login_required
+def checkout(request):
+    cart = get_object_or_404(Cart, user=request.user)
+    cart_items = cart.items.all()
+
+    # Agar cart khali hai to redirect karein
+    if not cart_items:
+        return redirect('view_cart')
+
+    # transaction.atomic ensures that all database operations are completed successfully
+    # Agar koi bhi operation fail hota hai, to saare changes aapis aa jayenge
+    with transaction.atomic():
+        # User ka address get karein, ya default address istemal karein
+        shipping_address = request.user.profile.address or "Default Address, Please Update"
+
+        # Naya Order banayein
+        order = Order.objects.create(
+            user=request.user,
+            shipping_address=shipping_address,
+            total_amount=cart.get_grand_total(),
+            payment_method='COD' # Abhi ke liye Cash on Delivery
+        )
+
+        # Cart items ko Order items mein convert karein
+        for item in cart_items:
+            OrderItem.objects.create(
+                order=order,
+                product=item.product,
+                quantity=item.quantity,
+                price=item.product.price
+            )
+
+        # Cart ko khali kar dein
+        cart.items.all().delete()
+
+    # Order successful page par redirect karein
+    return redirect('order_successful', order_id=order.order_id)
+
+
+@login_required
+def order_successful(request, order_id):
+    order = get_object_or_404(Order, order_id=order_id, user=request.user)
+    context = {
+        'order': order,
+        'main_categories': get_main_categories(),
+    }
+    return render(request, 'cart/order_successful.html', context)

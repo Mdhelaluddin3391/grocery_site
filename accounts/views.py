@@ -1,10 +1,14 @@
 # accounts/views.py
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
-from .forms import CustomUserCreationForm, CustomAuthenticationForm
+# AddressForm ko bhi import karna hai
+from .forms import CustomUserCreationForm, CustomAuthenticationForm, AddressForm
 from django.contrib.auth.decorators import login_required
+from cart.models import Order
+from .models import Address # Address model ko import karein
 
+# --- AUTHENTICATION VIEWS (YEH MISSING THE) ---
 def register_view(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
@@ -34,8 +38,40 @@ def logout_view(request):
     logout(request)
     return redirect('home')
 
+
+# --- PROFILE AND ADDRESS VIEWS ---
 @login_required
 def profile_view(request):
-    # The user object is already available in the request
-    # and their profile is accessible via the 'profile' related_name
-    return render(request, 'accounts/profile.html')
+    orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    addresses = Address.objects.filter(user=request.user)
+    address_form = AddressForm()
+
+    context = {
+        'orders': orders,
+        'addresses': addresses,
+        'address_form': address_form,
+    }
+    return render(request, 'accounts/profile.html', context)
+
+@login_required
+def add_address(request):
+    if request.method == 'POST':
+        form = AddressForm(request.POST)
+        if form.is_valid():
+            address = form.save(commit=False)
+            address.user = request.user
+            address.save()
+            return redirect('profile')
+    return redirect('profile')
+
+@login_required
+def edit_address(request, address_id):
+    address = get_object_or_404(Address, id=address_id, user=request.user)
+    # Edit logic yahan aayega
+    return redirect('profile')
+
+@login_required
+def delete_address(request, address_id):
+    address = get_object_or_404(Address, id=address_id, user=request.user)
+    address.delete()
+    return redirect('profile')

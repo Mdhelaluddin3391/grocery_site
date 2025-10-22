@@ -51,7 +51,7 @@
                     <span>Total Amount</span>
                     <span>₹<span id="summary-grand-total">{{ cart.get_grand_total|floatformat:2 }}</span></span>
                 </div>
-                <button class="checkout-btn">Proceed to Checkout</button>
+                <a href="{% url 'checkout' %}" class="checkout-btn" style="text-decoration: none; text-align: center;">Proceed to Checkout</a>
             </div>
         </div>
     </div>

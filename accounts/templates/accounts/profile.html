@@ -79,6 +79,94 @@
         background-color: #5bc0de;
         color: #fff;
     }
+    /* Order History Table Styles */
+    .order-history-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+    .order-history-table th, .order-history-table td {
+        border: 1px solid #ddd;
+        padding: 12px;
+        text-align: left;
+    }
+    .order-history-table th {
+        background-color: #f7f7f7;
+        font-weight: 600;
+    }
+    .order-status {
+        padding: 4px 8px;
+        border-radius: 4px;
+        color: #fff;
+        font-size: 0.9em;
+        font-weight: 500;
+    }
+    .status-pending { background-color: #f0ad4e; }
+    .status-delivered { background-color: #5cb85c; }
+    .status-cancelled { background-color: #d9534f; }
+
+    /* --- NAYE ADDRESS STYLES --- */
+    .address-card {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+    .address-type {
+        font-weight: bold;
+        background-color: #eee;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.9em;
+        margin-bottom: 8px;
+        display: inline-block;
+    }
+    .address-details p {
+        margin: 4px 0;
+        color: #555;
+    }
+    .address-actions a {
+        text-decoration: none;
+        padding: 6px 12px;
+        border-radius: 5px;
+        color: #fff;
+        font-size: 0.9em;
+        margin-left: 10px;
+    }
+    .btn-edit { background-color: #5bc0de; }
+    .btn-delete { background-color: #d9534f; }
+
+    .add-address-form {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+    }
+    .add-address-form h4 {
+        margin-bottom: 15px;
+    }
+    .add-address-form p {
+        margin-bottom: 10px;
+    }
+    .add-address-form input, .add-address-form select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin-top: 5px; /* Added for spacing */
+    }
+    .btn-submit {
+        background-color: #28a745;
+        color: #fff;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 10px;
+        width: 100%;
+    }
 </style>
 {% endblock extra_css %}
 
@@ -94,16 +182,67 @@
 
     <div class="profile-section">
         <h3>My Addresses</h3>
+        
+        {% for address in addresses %}
+        <div class="address-card">
+            <div class="address-details">
+                <span class="address-type">{{ address.address_type }}</span>
+                <p>{{ address.address_line_1 }}{% if address.address_line_2 %}, {{ address.address_line_2 }}{% endif %}</p>
+                <p>{{ address.city }}, {{ address.state }} - {{ address.pincode }}</p>
+            </div>
+            <div class="address-actions">
+                <a href="{% url 'edit_address' address.id %}" class="btn-edit">Edit</a>
+                <a href="{% url 'delete_address' address.id %}" class="btn-delete">Delete</a>
+            </div>
+        </div>
+        {% empty %}
         <div class="placeholder">
             <p>You have no saved addresses.</p>
-            </div>
+        </div>
+        {% endfor %}
+
+        <div class="add-address-form">
+            <h4>Add a New Address</h4>
+            <form action="{% url 'add_address' %}" method="post">
+                {% csrf_token %}
+                {{ address_form.as_p }}
+                <button type="submit" class="btn-submit">Save Address</button>
+            </form>
+        </div>
     </div>
 
     <div class="profile-section">
         <h3>Order History</h3>
+        {% if orders %}
+        <div style="overflow-x:auto;">
+            <table class="order-history-table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Date</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>{{ order.order_id }}</td>
+                        <td>{{ order.created_at|date:"d M, Y" }}</td>
+                        <td>₹{{ order.total_amount|floatformat:2 }}</td>
+                        <td>
+                            <span class="order-status status-{{ order.status|lower }}">{{ order.status }}</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
         <div class="placeholder">
             <p>You have no past orders.</p>
-            </div>
+        </div>
+        {% endif %}
     </div>
 
     <div class="profile-section">
