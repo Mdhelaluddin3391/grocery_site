@@ -10,6 +10,7 @@
 {% block content %}
 <div class="container">
 
+    {% if subcategories %}
     <aside class="sidebar">
         <ul class="sidebar-nav">
             {% for sub in subcategories %}
@@ -21,11 +22,10 @@
                     {{ sub.name }}
                 </a>
             </li>
-            {% empty %}
-            <li>No subcategories available</li>
             {% endfor %}
         </ul>
     </aside>
+    {% endif %}
 
     <main class="product-grid-container">
         <div class="product-grid">
@@ -35,7 +35,7 @@
                 <span class="product-discount">{{ product.discount }} OFF</span>
                 {% endif %}
                 <img src="{{ product.image.url|default:'https://via.placeholder.com/150' }}" alt="{{ product.name }}">
-                <div class="product-time">⏱ {{ product.time|default:"25 MINS" }}</div>
+                <div class="product-time">⏱ {{ product.time|default:"15 MINS" }}</div>
                 <h3 class="product-name">{{ product.name }}</h3>
                 <p class="product-quantity">{{ product.quantity|default:"500 ml" }}</p>
                 <div class="product-footer">

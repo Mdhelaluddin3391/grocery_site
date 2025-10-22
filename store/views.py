@@ -53,19 +53,25 @@ def load_more_categories(request):
     return JsonResponse({'html': html, 'has_more': categories_page.has_next()})
 
 
-# Baaki ke views waise hi rahenge
+
 def category_detail(request, slug):
     category = get_object_or_404(Category, slug=slug)
 
+    # Agar yeh ek main category hai (jiska koi parent nahi hai)
     if category.parent is None:
+        # Iske sabhi sub-categories ko lein
         child_categories = category.subcategories.all()
-        products = Product.objects.filter(category__in=child_categories)
+        # Main category aur uske sabhi sub-categories ko ek list mein daalein
+        categories_to_fetch = [category] + list(child_categories)
+        # Un sabhi categories ke products ko fetch karein
+        products = Product.objects.filter(category__in=categories_to_fetch)
+        # Sidebar ke liye, iske sub-categories ko set karein
+        subcategories = child_categories
+    # Agar yeh ek sub-category hai
     else:
+        # Sirf isi sub-category ke products ko lein
         products = Product.objects.filter(category=category)
-
-    if category.parent is None:
-        subcategories = category.subcategories.all()
-    else:
+        # Sidebar ke liye, iske parent ke sabhi sub-categories (siblings) ko set karein
         subcategories = category.parent.subcategories.all()
 
     context = {
@@ -75,7 +81,6 @@ def category_detail(request, slug):
         'main_categories': get_main_categories(),
     }
     return render(request, 'store/category_detail.html', context)
-
 
 def product_detail(request, slug):
     product = get_object_or_404(Product, slug=slug)
