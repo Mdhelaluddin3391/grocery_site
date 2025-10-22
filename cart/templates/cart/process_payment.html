@@ -1,0 +1,38 @@
+{# NAYI FILE: mdhelaluddin3391/grocery_site/grocery_site-f1f6d422192c0e0c4879eb55c3d620164920b56e/cart/templates/cart/process_payment.html #}
+
+{% extends 'store/base.html' %}
+{% load static %}
+
+{% block title %}Process Payment{% endblock title %}
+
+{% block extra_css %}
+<style>
+    .payment-container { max-width: 600px; margin: 40px auto; padding: 40px; text-align: center; background-color: #fff; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+    .payment-container h1 { font-size: 2rem; margin-bottom: 15px; }
+    .payment-container p { font-size: 1.1rem; color: #555; }
+    .order-total { font-size: 2.5rem; font-weight: bold; color: #28a745; margin: 20px 0; }
+    .shipping-info { text-align: left; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
+    .btn-pay { background-color: #5e2de2; color: #fff; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 1.2rem; font-weight: 600; margin-top: 20px; }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="payment-container">
+    <img src="https://cdn-icons-png.flaticon.com/512/8940/8940201.png" alt="UPI" style="width: 80px; margin-bottom: 20px;">
+    <h1>Complete Your Payment</h1>
+    <p>Please pay the following amount using UPI</p>
+    <div class="order-total">₹{{ cart.get_grand_total|floatformat:2 }}</div>
+
+    <div class="shipping-info">
+        <h4>Shipping to:</h4>
+        <p><strong>{{ address.address_line_1 }}</strong><br>
+        {{ address.city }}, {{ address.state }} - {{ address.pincode }}</p>
+    </div>
+
+    <form action="{% url 'checkout' %}" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="selected_address" value="{{ address.id }}">
+        <input type="hidden" name="payment_method" value="COD"> <button type="submit" class="btn-pay">Simulate Payment & Place Order</button>
+    </form>
+</div>
+{% endblock content %}

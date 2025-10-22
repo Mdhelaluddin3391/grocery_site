@@ -112,87 +112,78 @@ def decrement_cart_item(request, item_id):
 @login_required
 def checkout(request):
     cart = get_object_or_404(Cart, user=request.user)
-    cart_items = cart.items.all()
-
-    if not cart_items:
+    if not cart.items.all().exists():
         return redirect('view_cart')
 
     addresses = Address.objects.filter(user=request.user)
     address_form = AddressForm()
-    selected_address = None
-
+    
     if request.method == 'POST':
-        # Case 1: Agar user naya address daal kar order kar raha hai
-        if 'add_and_use_address' in request.POST:
+        selected_address = None
+        
+        # Step 1: Address select ya create karein
+        if request.POST.get('selected_address'):
+            address_id = request.POST.get('selected_address')
+            selected_address = get_object_or_404(Address, id=address_id, user=request.user)
+        else:
             form = AddressForm(request.POST)
             if form.is_valid():
-                address = form.save(commit=False)
-                address.user = request.user
-                address.save()
-                selected_address = address
+                selected_address = form.save(commit=False)
+                selected_address.user = request.user
+                selected_address.latitude = request.POST.get('latitude')
+                selected_address.longitude = request.POST.get('longitude')
+                selected_address.save()
             else:
-                # Agar form mein galti hai, to error ke saath page wapas dikhao
-                return render(request, 'cart/checkout.html', {
-                    'cart': cart,
-                    'addresses': addresses,
-                    'address_form': form, # Galat form wapas bhejo
-                    'error': 'Please correct the errors in the new address form.'
-                })
-        # Case 2: Agar user pehle se saved address select karke order kar raha hai
-        elif 'use_selected_address' in request.POST:
-            selected_address_id = request.POST.get('selected_address')
-            if selected_address_id:
-                selected_address = get_object_or_404(Address, id=selected_address_id, user=request.user)
-            else:
-                # Agar koi address select nahi kiya to error dikhao
-                return render(request, 'cart/checkout.html', {
-                    'cart': cart,
-                    'addresses': addresses,
-                    'address_form': address_form,
-                    'error': 'Please select a shipping address from the list.'
-                })
+                return render(request, 'cart/checkout.html', { 'cart': cart, 'addresses': addresses, 'address_form': form, 'error': 'Please correct the address errors.' })
 
-        # Agar humare paas address hai (naya ya purana), to order create karo
-        if selected_address:
+        if not selected_address:
+            return render(request, 'cart/checkout.html', { 'cart': cart, 'addresses': addresses, 'address_form': address_form, 'error': 'Please select or add a shipping address.' })
+
+        # Step 2: Payment method ke hisaab se action lein
+        payment_method = request.POST.get('payment_method')
+
+        if payment_method == 'COD':
             with transaction.atomic():
-                shipping_address_str = f"{selected_address.address_line_1}, {selected_address.address_line_2 or ''}, {selected_address.city}, {selected_address.state} - {selected_address.pincode}"
-
+                shipping_address_str = f"{selected_address.address_line_1}, {selected_address.city}, {selected_address.pincode}"
                 order = Order.objects.create(
                     user=request.user,
                     shipping_address=shipping_address_str,
                     total_amount=cart.get_grand_total(),
-                    payment_method='COD'
+                    payment_method='COD',
+                    payment_status=False # COD mein payment pending rehta hai
                 )
-
-                for item in cart_items:
-                    OrderItem.objects.create(
-                        order=order,
-                        product=item.product,
-                        quantity=item.quantity,
-                        price=item.product.price
-                    )
-
+                for item in cart.items.all():
+                    OrderItem.objects.create(order=order, product=item.product, quantity=item.quantity, price=item.product.price)
                 cart.items.all().delete()
-
             return redirect('order_successful', order_id=order.order_id)
-        
-        # Agar koi address select nahi hua to fallback error
+
+        elif payment_method == 'UPI':
+            # Abhi ke liye, hum order create nahi karenge. Sirf payment page par bhejenge.
+            # Hum address aur cart ki details ko session mein save kar sakte hain
+            request.session['shipping_address_id'] = selected_address.id
+            # Asli project mein yahan payment gateway ka code aayega
+            return redirect('process_payment') # Naya URL
+
         else:
-             return render(request, 'cart/checkout.html', {
-                'cart': cart,
-                'addresses': addresses,
-                'address_form': address_form,
-                'error': 'Please select or add an address to continue.'
-            })
+            return render(request, 'cart/checkout.html', { 'cart': cart, 'addresses': addresses, 'address_form': address_form, 'error': 'Please select a payment method.' })
 
+    return render(request, 'cart/checkout.html', { 'cart': cart, 'addresses': addresses, 'address_form': address_form })
 
-    # GET request ke liye
-    return render(request, 'cart/checkout.html', {
-        'cart': cart,
-        'addresses': addresses,
-        'address_form': address_form,
-    })
+@login_required
+def process_payment(request):
+    # Yeh ek placeholder view hai UPI payment ke liye
+    address_id = request.session.get('shipping_address_id')
+    if not address_id:
+        return redirect('checkout')
 
+    address = get_object_or_404(Address, id=address_id)
+    cart = get_object_or_404(Cart, user=request.user)
+    
+    context = {
+        'address': address,
+        'cart': cart
+    }
+    return render(request, 'cart/process_payment.html', context)
 
 @login_required
 def order_successful(request, order_id):
