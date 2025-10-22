@@ -43,9 +43,9 @@
 
 
         </div>
-        <div class="search-bar">
-            <input type="text" placeholder="Search for items" />
-        </div>
+        <form class="search-bar" method="GET" action="{% url 'search_results' %}">
+            <input type="text" name="q" placeholder="Search for items..." value="{{ request.GET.q }}">
+        </form>
 
         <div class="top-category-bar">
             <a href="{% url 'home' %}" class="top-category-item {% if not category %}active{% endif %}">

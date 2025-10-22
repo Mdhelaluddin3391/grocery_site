@@ -5,6 +5,7 @@ from .models import Category, Product
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+from django.db.models import Q
 
 def get_main_categories():
     """Helper function to get main categories for the header."""
@@ -86,3 +87,22 @@ def product_detail(request, slug):
         'main_categories': get_main_categories(),
     }
     return render(request, 'store/product_detail.html', context)
+
+
+def search_results(request):
+    query = request.GET.get('q')
+    products = Product.objects.none() # Shuruaat mein koi product nahi
+
+    if query:
+        # Hum product ke naam aur description dono mein search karenge
+        # 'icontains' case-insensitive search karta hai (e.g., 'Milk' aur 'milk' dono milenge)
+        products = Product.objects.filter(
+            Q(name__icontains=query) | Q(description__icontains=query)
+        )
+
+    context = {
+        'query': query,
+        'products': products,
+        'main_categories': get_main_categories(), # Header ke liye
+    }
+    return render(request, 'store/search_results.html', context)

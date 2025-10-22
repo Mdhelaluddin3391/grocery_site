@@ -1,0 +1,55 @@
+{% extends 'store/base.html' %}
+{% load static %}
+
+{% block title %}Search Results for "{{ query }}"{% endblock title %}
+
+{% block extra_css %}
+{# Hum category page ka CSS istemal kar sakte hain #}
+<link rel="stylesheet" href="{% static 'store/css/category_detail.css' %}">
+{% endblock extra_css %}
+
+{% block content %}
+<div class="container" style="display: block; padding: 20px;">
+
+    <h1 style="margin-bottom: 20px;">
+        {% if products %}
+            Search Results for: <span style="color: #00a94f;">"{{ query }}"</span>
+        {% else %}
+            No results found for: <span style="color: #e74c3c;">"{{ query }}"</span>
+        {% endif %}
+    </h1>
+
+    <main class="product-grid-container" style="height: auto; overflow: visible;">
+        <div class="product-grid">
+            {% for product in products %}
+            <div class="product-card">
+                {% if product.discount %}
+                <span class="product-discount">{{ product.discount }} OFF</span>
+                {% endif %}
+                <a href="{% url 'product_detail' product.slug %}">
+                    <img src="{{ product.image.url|default:'https://via.placeholder.com/150' }}" alt="{{ product.name }}">
+                </a>
+                <div class="product-time">⏱ {{ product.time|default:"25 MINS" }}</div>
+                <h3 class="product-name">{{ product.name }}</h3>
+                <p class="product-quantity">{{ product.quantity|default:"500 ml" }}</p>
+                <div class="product-footer">
+                    <div class="product-price">
+                        {% if product.old_price %}
+                        <span class="old-price">₹{{ product.old_price }}</span>
+                        {% endif %}
+                        ₹{{ product.price }}
+                    </div>
+                    <a href="{% url 'add_to_cart' product.id %}" class="add-btn">ADD</a>
+                </div>
+            </div>
+            {% empty %}
+            <div style="text-align: center; grid-column: 1 / -1; padding: 40px;">
+                <img src="https://cdn-icons-png.flaticon.com/512/2748/2748558.png" alt="Not found" style="width: 80px; opacity: 0.6; margin-bottom: 20px;">
+                <p>We couldn't find any products matching your search.</p>
+                <p>Try searching for something else!</p>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+</div>
+{% endblock content %}
