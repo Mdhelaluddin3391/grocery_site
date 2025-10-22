@@ -12,7 +12,7 @@ class UserProfile(models.Model):
     def __str__(self):
         return f'{self.user.username} Profile'
 
-        
+
 class Address(models.Model):
     ADDRESS_TYPE_CHOICES = (
         ('Home', 'Home'),
@@ -27,6 +27,8 @@ class Address(models.Model):
     pincode = models.CharField(max_length=6)
     address_type = models.CharField(max_length=10, choices=ADDRESS_TYPE_CHOICES, default='Home')
     is_default = models.BooleanField(default=False)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
 
     def __str__(self):
         return f"{self.address_line_1}, {self.city} ({self.user.username})"

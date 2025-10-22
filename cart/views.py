@@ -6,6 +6,16 @@ from store.models import Product
 from django.contrib.auth.decorators import login_required
 from store.views import get_main_categories
 from django.db import transaction
+from django.http import JsonResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Cart, CartItem, Order, OrderItem
+from store.models import Product
+from django.contrib.auth.decorators import login_required
+from store.views import get_main_categories
+from django.db import transaction
+from accounts.models import Address
+from accounts.forms import AddressForm
+
 
 # ... add_to_cart, view_cart, remove_from_cart views waise hi rahenge ...
 
@@ -94,43 +104,94 @@ def decrement_cart_item(request, item_id):
 
 # --- CHECKOUT VIEW ---
 
+# cart/views.py
+
+
+# ... (other views remain the same) ...
+
 @login_required
 def checkout(request):
     cart = get_object_or_404(Cart, user=request.user)
     cart_items = cart.items.all()
 
-    # Agar cart khali hai to redirect karein
     if not cart_items:
         return redirect('view_cart')
 
-    # transaction.atomic ensures that all database operations are completed successfully
-    # Agar koi bhi operation fail hota hai, to saare changes aapis aa jayenge
-    with transaction.atomic():
-        # User ka address get karein, ya default address istemal karein
-        shipping_address = request.user.profile.address or "Default Address, Please Update"
+    addresses = Address.objects.filter(user=request.user)
+    address_form = AddressForm()
+    selected_address = None
 
-        # Naya Order banayein
-        order = Order.objects.create(
-            user=request.user,
-            shipping_address=shipping_address,
-            total_amount=cart.get_grand_total(),
-            payment_method='COD' # Abhi ke liye Cash on Delivery
-        )
+    if request.method == 'POST':
+        # Case 1: Agar user naya address daal kar order kar raha hai
+        if 'add_and_use_address' in request.POST:
+            form = AddressForm(request.POST)
+            if form.is_valid():
+                address = form.save(commit=False)
+                address.user = request.user
+                address.save()
+                selected_address = address
+            else:
+                # Agar form mein galti hai, to error ke saath page wapas dikhao
+                return render(request, 'cart/checkout.html', {
+                    'cart': cart,
+                    'addresses': addresses,
+                    'address_form': form, # Galat form wapas bhejo
+                    'error': 'Please correct the errors in the new address form.'
+                })
+        # Case 2: Agar user pehle se saved address select karke order kar raha hai
+        elif 'use_selected_address' in request.POST:
+            selected_address_id = request.POST.get('selected_address')
+            if selected_address_id:
+                selected_address = get_object_or_404(Address, id=selected_address_id, user=request.user)
+            else:
+                # Agar koi address select nahi kiya to error dikhao
+                return render(request, 'cart/checkout.html', {
+                    'cart': cart,
+                    'addresses': addresses,
+                    'address_form': address_form,
+                    'error': 'Please select a shipping address from the list.'
+                })
 
-        # Cart items ko Order items mein convert karein
-        for item in cart_items:
-            OrderItem.objects.create(
-                order=order,
-                product=item.product,
-                quantity=item.quantity,
-                price=item.product.price
-            )
+        # Agar humare paas address hai (naya ya purana), to order create karo
+        if selected_address:
+            with transaction.atomic():
+                shipping_address_str = f"{selected_address.address_line_1}, {selected_address.address_line_2 or ''}, {selected_address.city}, {selected_address.state} - {selected_address.pincode}"
 
-        # Cart ko khali kar dein
-        cart.items.all().delete()
+                order = Order.objects.create(
+                    user=request.user,
+                    shipping_address=shipping_address_str,
+                    total_amount=cart.get_grand_total(),
+                    payment_method='COD'
+                )
 
-    # Order successful page par redirect karein
-    return redirect('order_successful', order_id=order.order_id)
+                for item in cart_items:
+                    OrderItem.objects.create(
+                        order=order,
+                        product=item.product,
+                        quantity=item.quantity,
+                        price=item.product.price
+                    )
+
+                cart.items.all().delete()
+
+            return redirect('order_successful', order_id=order.order_id)
+        
+        # Agar koi address select nahi hua to fallback error
+        else:
+             return render(request, 'cart/checkout.html', {
+                'cart': cart,
+                'addresses': addresses,
+                'address_form': address_form,
+                'error': 'Please select or add an address to continue.'
+            })
+
+
+    # GET request ke liye
+    return render(request, 'cart/checkout.html', {
+        'cart': cart,
+        'addresses': addresses,
+        'address_form': address_form,
+    })
 
 
 @login_required
