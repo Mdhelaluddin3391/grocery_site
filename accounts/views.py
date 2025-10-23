@@ -7,8 +7,9 @@ from django.contrib.auth.decorators import login_required
 from cart.models import Order
 from .models import Address
 from django.contrib import messages
-from django.http import JsonResponse
-from django.template.loader import render_to_string
+# JSON aur render_to_string ki ab zaroorat nahi
+# from django.http import JsonResponse
+# from django.template.loader import render_to_string
 
 # --- AUTHENTICATION VIEWS (No Changes) ---
 def register_view(request):
@@ -41,7 +42,7 @@ def logout_view(request):
     return redirect('home')
 
 
-# --- PROFILE AND ADDRESS VIEWS (UPDATED) ---
+# --- PROFILE AND ADDRESS VIEWS (Reverted to simple version) ---
 @login_required
 def profile_view(request):
     orders = Order.objects.filter(user=request.user).order_by('-created_at')
@@ -62,26 +63,10 @@ def add_address(request):
             address = form.save(commit=False)
             address.user = request.user
             address.save()
-            
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                # AJAX request ke liye JSON response
-                new_address_html = render_to_string(
-                    'accounts/partials/_address_item.html', 
-                    {'address': address, 'addresses_count': request.user.addresses.count()}
-                )
-                return JsonResponse({
-                    'success': True, 
-                    'message': 'Address added successfully!',
-                    'new_address_html': new_address_html
-                })
             messages.success(request, 'Address added successfully!')
-            return redirect('profile')
         else:
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'errors': form.errors})
             messages.error(request, 'Please correct the errors below.')
-            return redirect('profile')
-    return redirect('profile')
+    return redirect('profile') # Hamesha profile page par redirect karega
 
 @login_required
 def edit_address(request, address_id):
@@ -100,28 +85,19 @@ def edit_address(request, address_id):
 def delete_address(request, address_id):
     address = get_object_or_404(Address, id=address_id, user=request.user)
     
-    # Deletion rokne ka logic
     if request.user.addresses.count() <= 1:
-        error_message = 'You cannot delete your only address. Please edit it instead.'
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'success': False, 'message': error_message})
-        messages.error(request, error_message)
+        messages.error(request, 'You cannot delete your only address. Please edit it instead.')
         return redirect('profile')
 
     if address.is_default:
-        error_message = 'You cannot delete your default address. Please set another address as default first.'
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'success': False, 'message': error_message})
-        messages.error(request, error_message)
+        messages.error(request, 'You cannot delete your default address. Please set another address as default first.')
         return redirect('profile')
 
     if request.method == 'POST':
         address.delete()
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'success': True, 'message': 'Address deleted successfully!'})
         messages.success(request, 'Address deleted successfully!')
     
-    return redirect('profile')
+    return redirect('profile') # Hamesha profile page par redirect karega
 
 # --- Other views (No Changes) ---
 @login_required
