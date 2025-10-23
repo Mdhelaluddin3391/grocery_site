@@ -7,21 +7,64 @@ from django.contrib.auth.decorators import login_required
 from cart.models import Order
 from .models import Address
 from django.contrib import messages
+# --- EMAIL VERIFICATION KE LIYE IMPORTS ---
+from django.contrib.sites.shortcuts import get_current_site
+from django.template.loader import render_to_string
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import EmailMessage
+from django.contrib.auth import get_user_model
 # JSON aur render_to_string ki ab zaroorat nahi
 # from django.http import JsonResponse
 # from django.template.loader import render_to_string
 
 # --- AUTHENTICATION VIEWS (No Changes) ---
+# --- UPDATED REGISTER VIEW ---
 def register_view(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return redirect('home')
+            user = form.save(commit=False)
+            user.is_active = False # User ko inactive banayein
+            user.save()
+            
+            # Activation email bhejein
+            current_site = get_current_site(request)
+            mail_subject = 'Activate your account.'
+            message = render_to_string('accounts/activation_email.html', {
+                'user': user,
+                'domain': current_site.domain,
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                'token': default_token_generator.make_token(user),
+            })
+            to_email = form.cleaned_data.get('email')
+            email = EmailMessage(mail_subject, message, to=[to_email])
+            email.send()
+            
+            # User ko batayein ki email check kare
+            return render(request, 'accounts/register_done.html')
     else:
         form = CustomUserCreationForm()
     return render(request, 'accounts/register.html', {'form': form})
+
+# --- NAYA ACTIVATION VIEW ---
+def activate(request, uidb64, token):
+    User = get_user_model()
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except(TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+    
+    if user is not None and default_token_generator.check_token(user, token):
+        user.is_active = True
+        user.save()
+        login(request, user)
+        messages.success(request, 'Congratulations! Your account is now active.')
+        return redirect('home')
+    else:
+        return render(request, 'accounts/activation_failed.html')
 
 def login_view(request):
     if request.method == 'POST':
@@ -98,6 +141,21 @@ def delete_address(request, address_id):
         messages.success(request, 'Address deleted successfully!')
     
     return redirect('profile') # Hamesha profile page par redirect karega
+
+
+@login_required
+def set_default_address(request, address_id):
+    # Sabse pehle, user ke sabhi addresses ko non-default set karein
+    request.user.addresses.update(is_default=False)
+    
+    # Fir, chune gaye address ko default set karein
+    address = get_object_or_404(Address, id=address_id, user=request.user)
+    address.is_default = True
+    address.save()
+    
+    messages.success(request, f'Address "{address.address_line_1}" has been set as default.')
+    return redirect('profile')
+
 
 # --- Other views (No Changes) ---
 @login_required

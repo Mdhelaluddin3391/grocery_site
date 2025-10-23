@@ -10,8 +10,17 @@
         {{ form.as_p }}
         <button type="submit" style="width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px;">Log In</button>
     </form>
-    <p style="text-align: center; margin-top: 15px;">
-        Don't have an account? <a href="{% url 'register' %}">Sign Up</a>
-    </p>
+    
+    {# --- YEH CODE JODA GAYA HAI --- #}
+    <div style="display: flex; justify-content: space-between; margin-top: 15px;">
+        <p style="margin: 0;">
+            Don't have an account? <a href="{% url 'register' %}">Sign Up</a>
+        </p>
+        <p style="margin: 0;">
+            <a href="{% url 'password_reset' %}">Forgot Password?</a>
+        </p>
+    </div>
+    {# --------------------------------- #}
+
 </div>
 {% endblock content %}

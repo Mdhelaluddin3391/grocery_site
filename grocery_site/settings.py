@@ -134,3 +134,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #my custome codes
 LOGIN_URL = '/accounts/login/'
 
+
+# --- EMAIL BACKEND SETTINGS (YEH CODE JODEIN) ---
+# Development ke liye: Emails console par print honge
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Production ke liye (jab site live ho):
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'your-email@gmail.com'  # Aapka email
+# EMAIL_HOST_PASSWORD = 'your-app-password' # Aapka app password
