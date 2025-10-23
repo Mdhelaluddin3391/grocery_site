@@ -247,3 +247,22 @@ footer {
         flex: 1 1 300px;
     }
 }
+
+
+/* ====== STOCK MANAGEMENT STYLES ====== */
+.out-of-stock-btn {
+    background-color: #e9ecef;
+    color: #6c757d;
+    border: 1px solid #ced4da;
+    font-weight: bold;
+    font-size: 14px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: not-allowed;
+    text-align: center;
+}
+
+.add-to-cart-btn.out-of-stock-btn {
+    font-size: 16px;
+    padding: 12px 25px;
+}

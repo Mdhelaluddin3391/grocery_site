@@ -21,9 +21,9 @@ def index(request):
     categories_page = paginator.get_page(page_number)
     
     for category in categories_page:
-        category.limited_products = category.products.all()[:10]
+        category.limited_products = category.products.filter(stock__gt=0)[:10]
 
-    specials = Product.objects.filter(is_special=True)
+    specials = Product.objects.filter(is_special=True, stock__gt=0)
 
     return render(request, 'store/index.html', {
         'categories': categories_page, # Yeh lazy loaded hain

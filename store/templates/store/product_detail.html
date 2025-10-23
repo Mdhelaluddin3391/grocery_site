@@ -27,7 +27,14 @@
                 {% endif %}
             </div>
 
-            <a href="{% url 'add_to_cart' product.id %}" class="add-to-cart-btn add-btn">ADD TO CART</a>
+            {# --- STOCK MANAGEMENT LOGIC --- #}
+            {% if product.stock > 0 %}
+                <a href="{% url 'add_to_cart' product.id %}" class="add-to-cart-btn add-btn">ADD TO CART</a>
+            {% else %}
+                <button class="add-to-cart-btn out-of-stock-btn" disabled>OUT OF STOCK</button>
+            {% endif %}
+            {# --------------------------------- #}
+
             <div class="product-description">
                 <h3>Description</h3>
                 <p>{{ product.description|default:"No description available for this product."|linebreaks }}</p>
@@ -50,8 +57,14 @@
                     <div class="price">
                         <span>₹{{ prod.price }}</span>
                         
-                        <a href="{% url 'add_to_cart' prod.id %}" class="add-btn">ADD</a>
-                        </div>
+                        {# --- STOCK MANAGEMENT LOGIC (RELATED PRODUCTS) --- #}
+                        {% if prod.stock > 0 %}
+                            <a href="{% url 'add_to_cart' prod.id %}" class="add-btn">ADD</a>
+                        {% else %}
+                            <span class="out-of-stock-btn">Out of Stock</span>
+                        {% endif %}
+                        {# ---------------------------------------------------- #}
+                    </div>
                 </div>
                 {% endfor %}
             </div>

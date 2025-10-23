@@ -52,6 +52,7 @@ class Product(models.Model):
     discount = models.CharField(max_length=20, blank=True, null=True) # e.g., "10% OFF"
     quantity = models.CharField(max_length=50, blank=True, null=True) # e.g., "500 ml"
     time = models.CharField(max_length=50, blank=True, null=True) # e.g., "25 MINS"
+    stock = models.PositiveIntegerField(default=10, help_text="Available quantity")
     # -----------------------------------
 
     is_special = models.BooleanField(default=False)

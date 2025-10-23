@@ -39,7 +39,14 @@
                         {% endif %}
                         ₹{{ product.price }}
                     </div>
-                    <a href="{% url 'add_to_cart' product.id %}" class="add-btn">ADD</a>
+                    
+                    {# --- STOCK MANAGEMENT LOGIC --- #}
+                    {% if product.stock > 0 %}
+                        <a href="{% url 'add_to_cart' product.id %}" class="add-btn">ADD</a>
+                    {% else %}
+                        <span class="out-of-stock-btn">Out of Stock</span>
+                    {% endif %}
+                    {# --------------------------------- #}
                 </div>
             </div>
             {% empty %}

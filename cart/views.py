@@ -15,7 +15,7 @@ from store.views import get_main_categories
 from django.db import transaction
 from accounts.models import Address
 from accounts.forms import AddressForm
-
+from django.contrib import messages # messages ko import karein
 
 # ... add_to_cart, view_cart, remove_from_cart views waise hi rahenge ...
 
@@ -25,13 +25,30 @@ def add_to_cart(request, product_id):
     cart, created = Cart.objects.get_or_create(user=request.user)
     cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
 
-    if not created:
+    # Stock check karein
+    if created:
+        # Agar item pehli baar add ho raha hai
+        if product.stock < 1:
+            cart_item.delete()
+            messages.error(request, f"Sorry, '{product.name}' is out of stock.")
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'error': 'Out of stock'}, status=400)
+            return redirect(request.META.get('HTTP_REFERER', 'home'))
+    else:
+        # Agar item pehle se cart mein hai
+        if product.stock <= cart_item.quantity:
+            messages.error(request, f"Sorry, you cannot add more of '{product.name}'. Stock limit reached.")
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'error': 'Stock limit reached'}, status=400)
+            return redirect(request.META.get('HTTP_REFERER', 'home'))
         cart_item.quantity += 1
+    
     cart_item.save()
 
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return JsonResponse({'cart_item_count': cart.get_total_items()})
     
+    messages.success(request, f"'{product.name}' has been added to your cart.")
     return redirect(request.META.get('HTTP_REFERER', 'home'))
 
 
@@ -48,7 +65,18 @@ def view_cart(request):
 @login_required
 def remove_from_cart(request, item_id):
     cart_item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
+    cart = cart_item.cart # Cart ko pehle hi le lo
+    item_id_str = str(cart_item.id) # ID ko string mein save kar lo
     cart_item.delete()
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        # Agar yeh ek AJAX request hai, toh JSON response bhejein
+        cart_data = cart.get_data_for_json()
+        cart_data['item_removed'] = True
+        cart_data['item_id'] = item_id_str
+        return JsonResponse(cart_data)
+    
+    # Normal request ke liye, redirect karein
     return redirect('view_cart')
 
 # --- UPDATED VIEWS ---
