@@ -7,133 +7,100 @@
 <style>
     body { background-color: #f4f4f4; }
     .profile-page {
-        max-width: 800px;
-        margin: 20px auto;
-        background-color: #fff;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        overflow: hidden;
+        max-width: 800px; margin: 20px auto; background-color: #fff;
+        border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden;
     }
+    .profile-header { display: flex; align-items: center; padding: 25px; }
+    .profile-icon img { width: 70px; height: 70px; border-radius: 50%; margin-right: 20px; }
+    .profile-info h2 { margin: 0 0 5px 0; font-size: 1.5rem; }
+    .profile-info p { margin: 0; color: #666; font-size: 1rem; }
 
-    /* Profile Header */
-    .profile-header {
-        display: flex;
-        align-items: center;
-        padding: 25px;
-    }
-    .profile-icon img {
-        width: 70px;
-        height: 70px;
-        border-radius: 50%;
-        margin-right: 20px;
-    }
-    .profile-info h2 {
-        margin: 0 0 5px 0;
-        font-size: 1.5rem;
-    }
-    .profile-info p {
-        margin: 0;
-        color: #666;
-        font-size: 1rem;
-    }
-
-    /* Profile Menu/Options */
-    .profile-menu {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
+    .profile-menu { list-style: none; padding: 0; margin: 0; }
     .menu-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 20px 25px;
-        border-top: 1px solid #eee;
-        text-decoration: none;
-        color: #333;
-        transition: background-color 0.2s;
-        cursor: pointer;
+        display: flex; justify-content: space-between; align-items: center; padding: 20px 25px;
+        border-top: 1px solid #eee; text-decoration: none; color: #333;
+        transition: background-color 0.2s; cursor: pointer;
     }
-    .menu-item:hover { background-color: #f9f9f9; }
+    .menu-item.is-link:hover { background-color: #f9f9f9; }
     .menu-item-title { font-weight: 500; font-size: 1.1rem; }
     .menu-item-subtitle { font-size: 0.9rem; color: #888; }
-    .menu-item-arrow { color: #888; } /* For arrow icon */
-    a.menu-item { cursor: pointer; }
+    .menu-item-arrow { color: #888; transition: transform 0.3s; }
+    .menu-item.active .menu-item-arrow { transform: rotate(90deg); }
 
-    /* Sub-menu styling */
-    .sub-menu {
-        display: none;
-        padding: 15px 25px;
-        background: #fafafa;
-        border-top: 1px solid #eee;
-    }
+    .sub-menu { display: none; padding: 15px 25px; background: #fafafa; border-top: 1px solid #eee; }
     .sub-menu-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px 0;
-        border-bottom: 1px solid #e5e5e5;
+        display: flex; justify-content: space-between; align-items: center; padding: 10px 0;
+        border-bottom: 1px solid #e5e5e5; transition: opacity 0.3s ease;
     }
     .sub-menu-item:last-child { border-bottom: none; }
-    .sub-menu-item a { color: #007bff; text-decoration: none; }
-
-    /* Naya address form aage ke liye */
+    .address-actions { display: flex; align-items: center; }
+    .btn-edit { color: #007bff; text-decoration: none; margin-right: 15px; }
+    .btn-delete { background: none; border: none; color: #d9534f; cursor: pointer; text-decoration: underline; font-size: 1em; }
+    .default-badge { font-weight: bold; color: #28a745; margin-left: 5px; }
+    
     .btn-submit {
-        background-color: #28a745;
-        color: #fff;
-        border: none;
-        padding: 12px 20px;
-        border-radius: 5px;
-        cursor: pointer;
-        margin-top: 10px;
-        width: 100%;
+        background-color: #28a745; color: #fff; border: none; padding: 12px 20px;
+        border-radius: 5px; cursor: pointer; margin-top: 10px; width: 100%;
     }
-
-    /* Logout Button */
-    .logout-section {
-        padding: 25px;
-        text-align: center;
-        border-top: 1px solid #eee;
-    }
+    .logout-section { padding: 25px; text-align: center; border-top: 1px solid #eee; }
     .btn-logout {
-        background-color: #fdecec;
-        color: #d9534f;
-        border: 1px solid #f5c6cb;
-        padding: 12px 30px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 600;
-        text-decoration: none;
-        font-size: 1rem;
+        background-color: #fdecec; color: #d9534f; border: 1px solid #f5c6cb;
+        padding: 12px 30px; border-radius: 8px; cursor: pointer;
+        font-weight: 600; text-decoration: none; font-size: 1rem;
     }
+    .support-links a { margin: 0 10px; text-decoration: none; font-weight: 500; }
+
+    /* ---- Custom Modal CSS ---- */
+    .modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.5); display: none; justify-content: center;
+        align-items: center; z-index: 1000;
+    }
+    .modal-content {
+        background: white; padding: 30px; border-radius: 8px;
+        text-align: center; max-width: 400px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    .modal-content h3 { margin-bottom: 10px; }
+    .modal-content p { margin-bottom: 20px; color: #555; }
+    .modal-buttons button {
+        padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;
+        margin: 0 10px; font-weight: 600;
+    }
+    #modal-btn-delete { background-color: #d9534f; color: white; }
+    #modal-btn-cancel { background-color: #f0f0f0; color: #333; }
+    
+    /* ---- Toast Notification CSS ---- */
+    #toast-notification {
+        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+        background-color: #333; color: white; padding: 12px 25px;
+        border-radius: 25px; z-index: 1001;
+        opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s;
+    }
+    #toast-notification.show { opacity: 1; visibility: visible; }
+    #toast-notification.success { background-color: #28a745; }
+    #toast-notification.error { background-color: #d9534f; }
 </style>
 {% endblock extra_css %}
 
 {% block content %}
 <div class="profile-page">
-    
     <div class="profile-header">
-        <div class="profile-icon">
-            <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Profile Icon">
-        </div>
+        <div class="profile-icon"><img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Profile Icon"></div>
         <div class="profile-info">
             <h2>{{ user.get_full_name|default:user.username }}</h2>
             <p>{{ user.profile.phone_number|default:"No phone number" }}</p>
         </div>
     </div>
-    
     <hr style="border: 0; border-top: 1px solid #eee; margin: 0;">
-
     <div class="profile-menu">
-        <a href="{% url 'edit_profile' %}" class="menu-item">
+        <a href="{% url 'edit_profile' %}" class="menu-item is-link">
             <div>
                 <div class="menu-item-title">My Profile</div>
                 <div class="menu-item-subtitle">Update your name, email, phone</div>
             </div>
             <div class="menu-item-arrow">&gt;</div>
         </a>
-
-        <div class="menu-item" onclick="toggleSubMenu('orders-sub-menu');">
+        <div class="menu-item" data-submenu="orders-sub-menu">
             <div>
                 <div class="menu-item-title">My Orders</div>
                 <div class="menu-item-subtitle">View your recent and past orders</div>
@@ -141,19 +108,19 @@
             <div class="menu-item-arrow">&gt;</div>
         </div>
         <div id="orders-sub-menu" class="sub-menu">
-             {% for order in orders|slice:":3" %} <a href="{% url 'order_detail' order.order_id %}" class="menu-item" style="padding: 10px 0;">
-                     <div>
-                        <div class="menu-item-title" style="font-size: 1rem;">Order #{{ order.order_id }}</div>
-                        <div class="menu-item-subtitle">{{ order.created_at|date:"d M, Y" }} - {{ order.get_status_display }}</div>
-                    </div>
-                    <div class="menu-item-arrow" style="font-size: 0.9rem;">View</div>
-                </a>
+             {% for order in orders|slice:":3" %}
+             <a href="{% url 'order_detail' order.order_id %}" class="menu-item is-link" style="padding: 10px 0;">
+                <div>
+                    <div class="menu-item-title" style="font-size: 1rem;">Order #{{ order.order_id }}</div>
+                    <div class="menu-item-subtitle">{{ order.created_at|date:"d M, Y" }} - {{ order.get_status_display }}</div>
+                </div>
+                <div class="menu-item-arrow" style="font-size: 0.9rem;">View</div>
+            </a>
              {% empty %}
                 <div class="menu-item" style="padding: 10px 0;"><div class="menu-item-subtitle">No recent orders.</div></div>
              {% endfor %}
         </div>
-
-        <div class="menu-item" onclick="toggleSubMenu('address-sub-menu');">
+        <div class="menu-item" data-submenu="address-sub-menu">
             <div>
                 <div class="menu-item-title">My Addresses</div>
                 <div class="menu-item-subtitle">Add, edit or remove addresses</div>
@@ -161,32 +128,34 @@
             <div class="menu-item-arrow">&gt;</div>
         </div>
         <div id="address-sub-menu" class="sub-menu">
-            {% for address in addresses %}
-            <div class="sub-menu-item">
-                <p style="margin:0;">{{ address.address_line_1 }}, {{ address.city }}</p>
-                <a href="{% url 'edit_address' address.id %}">Edit</a>
+            <div id="address-list">
+                {% for address in addresses %}
+                    {% include 'accounts/partials/_address_item.html' with address=address addresses_count=addresses|length %}
+                {% empty %}
+                    <p id="no-address-message">No saved addresses.</p>
+                {% endfor %}
             </div>
-            {% empty %}
-            <p>No saved addresses.</p>
-            {% endfor %}
             <hr style="margin: 20px 0;">
             <h4>Add a New Address</h4>
-            <form action="{% url 'add_address' %}" method="post">
+            <form id="add-address-form" action="{% url 'add_address' %}" method="post" novalidate>
                 {% csrf_token %}
                 {{ address_form.as_p }}
                 <button type="submit" class="btn-submit">Save Address</button>
             </form>
         </div>
-
-        <a href="#" class="menu-item" onclick="alert('Customer Support: +91-1234567890');">
+        <div class="menu-item" data-submenu="support-sub-menu">
             <div>
                 <div class="menu-item-title">Customer Support</div>
                 <div class="menu-item-subtitle">Get help with your orders</div>
             </div>
             <div class="menu-item-arrow">&gt;</div>
-        </a>
-
-        <a href="{% url 'delete_profile' %}" class="menu-item">
+        </div>
+        <div id="support-sub-menu" class="sub-menu support-links">
+             <p>Contact us via Phone or WhatsApp:</p>
+             <a href="tel:+911234567890">📞 Call Us</a>
+             <a href="https://wa.me/911234567890" target="_blank">💬 WhatsApp Us</a>
+        </div>
+        <a href="{% url 'delete_profile' %}" class="menu-item is-link">
             <div>
                 <div class="menu-item-title">Delete Account</div>
                 <div class="menu-item-subtitle">Permanently delete your account</div>
@@ -194,20 +163,123 @@
             <div class="menu-item-arrow">&gt;</div>
         </a>
     </div>
-
     <div class="logout-section">
         <a href="{% url 'logout' %}" class="btn-logout">LOG OUT</a>
     </div>
 </div>
 
-<script>
-    function toggleSubMenu(id) {
-        var el = document.getElementById(id);
-        if (el.style.display === 'none' || el.style.display === '') {
-            el.style.display = 'block';
-        } else {
-            el.style.display = 'none';
-        }
-    }
-</script>
+<div class="modal-overlay" id="delete-modal">
+    <div class="modal-content">
+        <h3>Confirm Deletion</h3>
+        <p>Are you sure you want to delete this address? This action cannot be undone.</p>
+        <div class="modal-buttons">
+            <button id="modal-btn-cancel">Cancel</button>
+            <button id="modal-btn-delete">Delete</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast-notification"></div>
 {% endblock content %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const addressList = document.getElementById('address-list');
+        const addAddressForm = document.getElementById('add-address-form');
+        const noAddressMessage = document.getElementById('no-address-message');
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        // ---- Toast Notification Function ----
+        const toast = document.getElementById('toast-notification');
+        function showToast(message, type = 'success') {
+            toast.textContent = message;
+            toast.className = 'show ' + type;
+            setTimeout(() => { toast.className = toast.className.replace('show', ''); }, 3000);
+        }
+        
+        // ---- Add Address using AJAX ----
+        addAddressForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(addAddressForm);
+
+            fetch(addAddressForm.action, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (noAddressMessage) noAddressMessage.style.display = 'none';
+                    addressList.insertAdjacentHTML('beforeend', data.new_address_html);
+                    addAddressForm.reset();
+                    showToast(data.message, 'success');
+                } else {
+                    showToast('Failed to add address. Please check the form.', 'error');
+                }
+            })
+            .catch(error => showToast('An unexpected error occurred.', 'error'));
+        });
+        
+        // ---- Delete Address using AJAX and Modal ----
+        const deleteModal = document.getElementById('delete-modal');
+        const btnDeleteConfirm = document.getElementById('modal-btn-delete');
+        const btnCancel = document.getElementById('modal-btn-cancel');
+        let deleteUrlToDelete = null;
+
+        addressList.addEventListener('click', function (e) {
+            if (e.target.classList.contains('btn-delete')) {
+                deleteUrlToDelete = e.target.dataset.url;
+                deleteModal.style.display = 'flex';
+            }
+        });
+        
+        function closeModal() {
+            deleteModal.style.display = 'none';
+            deleteUrlToDelete = null;
+        }
+
+        btnCancel.addEventListener('click', closeModal);
+        
+        btnDeleteConfirm.addEventListener('click', function () {
+            if (!deleteUrlToDelete) return;
+
+            fetch(deleteUrlToDelete, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': csrfToken }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const addressId = deleteUrlToDelete.split('/').filter(Boolean).pop();
+                    const addressElement = document.getElementById(`address-${addressId}`);
+                    if (addressElement) {
+                        addressElement.style.opacity = '0';
+                        setTimeout(() => addressElement.remove(), 300);
+                    }
+                    showToast(data.message, 'success');
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(error => showToast('An unexpected error occurred.', 'error'))
+            .finally(closeModal);
+        });
+
+        // ---- **FIXED** Sub-Menu Toggle Logic ----
+        document.querySelectorAll('.menu-item[data-submenu]').forEach(item => {
+            item.addEventListener('click', function() {
+                const subMenuId = this.dataset.submenu;
+                const subMenu = document.getElementById(subMenuId);
+                if (subMenu) {
+                    // Toggle active class on the menu item for arrow rotation
+                    this.classList.toggle('active');
+                    // Toggle display of the submenu
+                    subMenu.style.display = (subMenu.style.display === 'block') ? 'none' : 'block';
+                }
+            });
+        });
+    });
+</script>
+{% endblock extra_js %}

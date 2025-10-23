@@ -7,7 +7,6 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     address = models.TextField(blank=True, null=True)
     phone_number = models.CharField(max_length=15, blank=True, null=True)
-     # Abhi ke liye URLField, baad mein ImageField kar sakte hain
 
     def __str__(self):
         return f'{self.user.username} Profile'
@@ -35,6 +34,19 @@ class Address(models.Model):
 
     class Meta:
         verbose_name_plural = "Addresses"
+
+    def save(self, *args, **kwargs):
+        # Agar user ka koi address nahi hai, to isey default bana do
+        if not self.user.addresses.exists():
+            self.is_default = True
+        
+        # Agar is address ko default banaya ja raha hai
+        elif self.is_default:
+            # To user ke baaki sabhi addresses ko non-default kar do
+            self.user.addresses.update(is_default=False)
+
+        super().save(*args, **kwargs)
+
 
 # Jab bhi koi naya User bane, uska UserProfile automatically ban jaye
 @receiver(post_save, sender=User)

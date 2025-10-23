@@ -1,0 +1,13 @@
+{# accounts/templates/accounts/partials/_address_item.html #}
+<div class="sub-menu-item" id="address-{{ address.id }}">
+    <p style="margin:0;">
+        {{ address.address_line_1 }}, {{ address.city }}
+        {% if address.is_default %}<span class="default-badge">(Default)</span>{% endif %}
+    </p>
+    <div class="address-actions">
+        <a href="{% url 'edit_address' address.id %}" class="btn-edit">Edit</a>
+        {% if not address.is_default and addresses_count > 1 %}
+        <button type="button" class="btn-delete" data-url="{% url 'delete_address' address.id %}">Delete</button>
+        {% endif %}
+    </div>
+</div>
