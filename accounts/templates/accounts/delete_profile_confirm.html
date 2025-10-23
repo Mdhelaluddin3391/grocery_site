@@ -1,0 +1,16 @@
+{# NAYI FILE: mdhelaluddin3391/grocery_site/grocery_site-ef56a17f05a0104c110d6d30e8f25e7b4f1e2b3c/accounts/templates/accounts/delete_profile_confirm.html #}
+
+{% extends 'store/base.html' %}
+{% block title %}Confirm Delete{% endblock title %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 40px auto; padding: 30px; text-align: center; border: 1px solid #ddd; border-radius: 8px;">
+    <h2>Are you sure?</h2>
+    <p>This action cannot be undone. All your data, including order history and saved addresses, will be permanently deleted.</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" style="background-color: #d9534f; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Yes, Delete My Account</button>
+        <a href="{% url 'profile' %}" style="margin-left: 10px; text-decoration: none; color: #333;">Cancel</a>
+    </form>
+</div>
+{% endblock %}
