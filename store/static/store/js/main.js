@@ -1,4 +1,4 @@
-// static/store/js/main.js (FINAL UPDATED CODE)
+// static/store/js/main.js (FINAL UPDATED CODE WITH VISUAL FEEDBACK)
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
         input.addEventListener('blur', () => searchBar.style.backgroundColor = '#f3f3f3');
     }
 
-    // 2. Promo Card Auto-Swipe Logic (UPDATED TO PREVENT PAGE JUMP)
+    // 2. Promo Card Auto-Swipe Logic
     const scrollBanner = document.querySelector('.scroll-banner');
     if (scrollBanner) {
         let currentCardIndex = 0;
@@ -18,49 +18,59 @@ document.addEventListener('DOMContentLoaded', () => {
         if (promoCards.length > 1) {
             setInterval(() => {
                 currentCardIndex = (currentCardIndex + 1) % promoCards.length;
-                
-                // --- YAHAN BADLAV KIYA GAYA HAI ---
-                // Purana code page ko scroll kar raha tha.
-                // Naya code sirf banner ke content ko scroll karega.
                 const nextCard = promoCards[currentCardIndex];
-                scrollBanner.scrollLeft = nextCard.offsetLeft;
-
-            }, 3000); 
+                scrollBanner.scroll({
+                    left: nextCard.offsetLeft,
+                    behavior: 'smooth'
+                });
+            }, 3000);
         }
     }
 
-    // 3. AJAX Add to Cart (for all current and future buttons)
+    // 3. AJAX Add to Cart (UPDATED WITH VISUAL FEEDBACK)
     document.body.addEventListener('click', function(event) {
-        if (event.target.classList.contains('add-btn')) {
+        const addButton = event.target.closest('.add-btn');
+        if (addButton) {
             event.preventDefault();
-            const url = event.target.href;
+            const url = addButton.href;
             if (!url) return;
+
+            const originalText = addButton.textContent;
+            addButton.textContent = 'Adding...';
 
             fetch(url, {
                 method: 'GET',
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
             .then(response => {
-                if (!response.ok) throw new Error('Not logged in or server error');
+                if (!response.ok) {
+                    throw new Error('Not logged in or server error');
+                }
                 return response.json();
             })
             .then(data => {
-                const cartCountSpan = document.querySelector('.cart-count');
-                // Create the span if it doesn't exist
-                let countSpan = cartCountSpan;
+                const cartLink = document.querySelector('.cart-link');
+                let countSpan = cartLink.querySelector('.cart-count');
                 if (!countSpan) {
-                    const cartLink = document.querySelector('.cart-link');
-                    if(cartLink) {
-                        countSpan = document.createElement('span');
-                        countSpan.className = 'cart-count';
-                        cartLink.appendChild(countSpan);
-                    }
+                    countSpan = document.createElement('span');
+                    countSpan.className = 'cart-count';
+                    cartLink.appendChild(countSpan);
                 }
                 
-                if (countSpan && data.cart_item_count !== undefined) {
+                if (data.cart_item_count !== undefined) {
                     countSpan.textContent = data.cart_item_count;
-                    countSpan.style.display = data.cart_item_count > 0 ? 'inline-block' : 'none';
+                    countSpan.style.display = 'inline-block';
                 }
+
+                addButton.style.backgroundColor = '#28a745';
+                addButton.style.color = '#fff';
+                addButton.textContent = 'Added!';
+                
+                setTimeout(() => {
+                    addButton.textContent = originalText;
+                    addButton.style.backgroundColor = '';
+                    addButton.style.color = '';
+                }, 1500);
             })
             .catch(error => {
                 console.error('Error adding to cart:', error);
@@ -69,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 4. Lazy Loading for Product Sections (UPDATED LOGIC)
+    // 4. Lazy Loading for Product Sections
     const loadMoreTrigger = document.getElementById('load-more-trigger');
     const categoryContainer = document.getElementById('category-container');
     const loadingText = document.querySelector('.loading-text');
@@ -80,10 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let hasMore = categoryContainer.dataset.hasMore === 'true';
 
         const loadMoreCategories = () => {
-            if (isLoading || !hasMore) {
-                return;
-            }
-
+            if (isLoading || !hasMore) return;
             isLoading = true;
             if (loadingText) loadingText.style.display = 'block';
 
@@ -99,23 +106,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 .catch(error => console.error('Error loading more categories:', error))
                 .finally(() => {
                     isLoading = false;
-                    if (loadingText) {
-                        // Loading text ko hamesha chhupa dein
-                        loadingText.style.display = 'none';
-                    }
-                    
+                    if (loadingText) loadingText.style.display = 'none';
                     if (!hasMore) {
-                        // Trigger ko hi remove kar dein
                         loadMoreTrigger.style.display = 'none';
-
-                        // Humara naya stylish message dikhayein
                         const endMessage = document.getElementById('end-of-list-message');
                         if (endMessage) {
                             endMessage.style.display = 'block';
-                            // Animation ke liye thoda sa delay add karein
-                            setTimeout(() => {
-                                endMessage.classList.add('visible');
-                            }, 50);
+                            setTimeout(() => { endMessage.classList.add('visible'); }, 50);
                         }
                     }
                 });
@@ -125,20 +122,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (entries[0].isIntersecting) {
                 loadMoreCategories();
             }
-        }, {
-            threshold: 0.1
-        });
+        }, { threshold: 0.1 });
         observer.observe(loadMoreTrigger);
     }
 
-    // 5. Dynamic Delivery Time Logic (YEH NAYA CODE HAI)
+    // 5. Dynamic Delivery Time Logic
     const deliveryInfoSpan = document.getElementById('delivery-info');
-
     const successCallback = (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
-
-        // Django view ko AJAX call karein
         fetch(`/ajax/get-delivery-info/?lat=${lat}&lng=${lng}`)
             .then(response => response.json())
             .then(data => {
@@ -146,17 +138,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     deliveryInfoSpan.textContent = data.delivery_message;
                 }
             })
-            .catch(error => {
-                console.error("Error fetching delivery info:", error);
-            });
+            .catch(error => console.error("Error fetching delivery info:", error));
     };
-
     const errorCallback = (error) => {
         console.warn(`Geolocation error: ${error.message}`);
-        // Agar user location deny karta hai, to default message hi dikhega
     };
-
-    // Browser se location poochhein
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(successCallback, errorCallback);
     }

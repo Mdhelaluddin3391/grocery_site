@@ -1,4 +1,5 @@
-# cart/views.py
+# cart/views.py (FINAL UPDATED CODE)
+
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Cart, CartItem, Order, OrderItem
@@ -16,16 +17,28 @@ def add_to_cart(request, product_id):
     cart, created = Cart.objects.get_or_create(user=request.user)
     cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
 
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
+
     if not created:
         if product.stock > cart_item.quantity:
             cart_item.quantity += 1
         else:
+            if is_ajax:
+                return JsonResponse({'error': 'Stock limit reached'}, status=400)
             messages.error(request, f"Sorry, you cannot add more of '{product.name}'. Stock limit reached.")
             return redirect(request.META.get('HTTP_REFERER', 'home'))
     
     cart_item.save()
+
+    if is_ajax:
+        return JsonResponse({
+            'cart_item_count': cart.get_total_items(),
+            'product_name': product.name
+        })
+
     messages.success(request, f"'{product.name}' has been added to your cart.")
     return redirect(request.META.get('HTTP_REFERER', 'home'))
+
 
 @login_required
 def view_cart(request):
@@ -39,7 +52,15 @@ def view_cart(request):
 @login_required
 def remove_from_cart(request, item_id):
     cart_item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
+    item_id_for_json = cart_item.id
+    cart = cart_item.cart
     cart_item.delete()
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        cart_data = cart.get_data_for_json()
+        cart_data.update({'item_removed': True, 'item_id': item_id_for_json})
+        return JsonResponse(cart_data)
+
     return redirect('view_cart')
 
 @login_required
@@ -49,15 +70,14 @@ def increment_cart_item(request, item_id):
         cart_item.quantity += 1
         cart_item.save()
     else:
-        # Optionally, you can send a message back to the user
         return JsonResponse({'error': 'Stock limit reached'}, status=400)
-        
-    return JsonResponse({
+    
+    cart_data = cart_item.cart.get_data_for_json()
+    cart_data.update({
         'item_quantity': cart_item.quantity,
         'item_subtotal': cart_item.get_subtotal(),
-        'cart_subtotal': cart_item.cart.get_subtotal(),
-        'cart_grand_total': cart_item.cart.get_grand_total(),
     })
+    return JsonResponse(cart_data)
 
 @login_required
 def decrement_cart_item(request, item_id):
@@ -103,32 +123,18 @@ def checkout(request):
                 selected_address = form.save(commit=False)
                 selected_address.user = request.user
                 
-                # --- ## ERROR FIX: Handle empty lat/lng values ---
                 lat = request.POST.get('latitude')
                 lng = request.POST.get('longitude')
                 
                 selected_address.latitude = lat if lat else None
                 selected_address.longitude = lng if lng else None
-                # -----------------------------------------------
 
                 selected_address.save()
             else:
-                # Agar form valid nahi hai, to error ke saath page dobara render karein
-                return render(request, 'cart/checkout.html', { 
-                    'cart': cart, 
-                    'addresses': addresses, 
-                    'address_form': form, 
-                    'error': 'Please correct the address errors.' 
-                })
+                return render(request, 'cart/checkout.html', { 'cart': cart, 'addresses': addresses, 'address_form': form, 'error': 'Please correct the address errors.' })
 
         if not selected_address:
-            # Agar koi bhi address select ya create nahi hua hai, to error dikhayein
-            return render(request, 'cart/checkout.html', { 
-                'cart': cart, 
-                'addresses': addresses, 
-                'address_form': address_form, 
-                'error': 'Please select or add a shipping address.' 
-            })
+            return render(request, 'cart/checkout.html', { 'cart': cart, 'addresses': addresses, 'address_form': address_form, 'error': 'Please select or add a shipping address.' })
 
         payment_method = request.POST.get('payment_method')
         if payment_method == 'COD':
@@ -148,12 +154,10 @@ def checkout(request):
                 )
 
                 for item in cart.items.all():
-                    # Order create karne se pehle stock check karein
                     product = item.product
                     if product.stock < item.quantity:
-                        # Agar stock kam hai, to transaction rollback karein aur error dikhayein
                         messages.error(request, f"Sorry, '{product.name}' is now out of stock.")
-                        return redirect('view_cart') # User ko cart page par wapas bhej dein
+                        return redirect('view_cart')
                     
                     OrderItem.objects.create(
                         order=order, 
@@ -161,7 +165,6 @@ def checkout(request):
                         quantity=item.quantity, 
                         price=product.price
                     )
-                    # Stock kam karein
                     product.stock -= item.quantity
                     product.save()
 
@@ -169,23 +172,12 @@ def checkout(request):
             return redirect('order_successful', order_id=order.order_id)
         
         elif payment_method == 'UPI':
-            # UPI logic yahan aayega
             return redirect('process_payment')
 
         else:
-            return render(request, 'cart/checkout.html', { 
-                'cart': cart, 
-                'addresses': addresses, 
-                'address_form': address_form, 
-                'error': 'Please select a valid payment method.' 
-            })
+            return render(request, 'cart/checkout.html', { 'cart': cart, 'addresses': addresses, 'address_form': address_form, 'error': 'Please select a valid payment method.' })
 
-    # GET request ke liye
-    return render(request, 'cart/checkout.html', { 
-        'cart': cart, 
-        'addresses': addresses, 
-        'address_form': address_form 
-    })
+    return render(request, 'cart/checkout.html', { 'cart': cart, 'addresses': addresses, 'address_form': address_form })
 
 @login_required
 def process_payment(request):
