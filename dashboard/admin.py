@@ -1,3 +1,5 @@
+# dashboard/admin.py (FINAL CODE)
+
 from django.contrib import admin
 
-# Register your models here.
+# Is app mein koi custom models nahi hain, isliye yeh file empty rahegi.

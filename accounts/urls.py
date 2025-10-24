@@ -22,4 +22,5 @@ urlpatterns = [
     path('order/<str:order_id>/', views.order_detail_view, name='order_detail'),
     path('profile/edit/', views.edit_profile_view, name='edit_profile'),
     path('profile/delete/', views.delete_profile_view, name='delete_profile'),
+    path('staff-login/', views.staff_login_view, name='staff_login'),
 ]

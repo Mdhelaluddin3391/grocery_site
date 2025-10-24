@@ -3,6 +3,8 @@
 from django import forms
 from .models import Address, UserProfile
 from django.contrib.auth.models import User
+from django.contrib.auth.forms import AuthenticationForm # <--- YEH NAYI IMPORT LINE ZAROOR JODEIN!
+
 
 # --- Naye Login/Signup Forms ---
 class PhoneNumberForm(forms.Form):
@@ -11,6 +13,9 @@ class PhoneNumberForm(forms.Form):
 class OTPForm(forms.Form):
     otp = forms.CharField(max_length=6, required=True, widget=forms.TextInput(attrs={'placeholder': 'Enter 6-digit OTP'}))
 
+class StaffLoginForm(AuthenticationForm):
+    # Base Django form for username/password login
+    pass
 
 # --- Profile aur Address se Jude Zaroori Forms ---
 

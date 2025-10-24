@@ -7,17 +7,19 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from datetime import timedelta
 from django.core.paginator import Paginator
-
+from django.contrib import messages
 from cart.models import Order
 from django.contrib import messages
 
 def is_staff(user):
     return user.is_staff
 
+
+STAFF_LOGIN_URL = '/accounts/staff-login/' # <-- YEH LINE BADLI GAYI HAI
 # --- DECORATORS IN ALL VIEWS ARE NOW UPDATED ---
 
-@login_required
-@user_passes_test(is_staff, login_url='/admin/login/')
+@login_required(login_url=STAFF_LOGIN_URL) # <-- NAYA LOGIN_URL
+@user_passes_test(is_staff, login_url=STAFF_LOGIN_URL) # <-- NAYA LOGIN_URL
 def dashboard_home(request):
     # KPI Calculations
     total_revenue = Order.objects.filter(status='Delivered').aggregate(total=Sum('total_amount'))['total'] or 0
@@ -37,8 +39,8 @@ def dashboard_home(request):
     }
     return render(request, 'dashboard/home.html', context)
 
-@login_required
-@user_passes_test(is_staff, login_url='/admin/login/')
+@login_required(login_url=STAFF_LOGIN_URL) # <-- NAYA LOGIN_URL
+@user_passes_test(is_staff, login_url=STAFF_LOGIN_URL) # <-- NAYA LOGIN_URL
 def order_list(request):
     """Displays a paginated and filterable list of all orders."""
     orders_queryset = Order.objects.all().order_by('-created_at')
