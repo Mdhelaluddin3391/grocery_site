@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store Dashboard</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f4f7fa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        th,
+        td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #34495e;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Live Orders</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Total Amount</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>{{ order.order_id }}</td>
+                    <td>{{ order.user.username }}</td>
+                    <td>₹{{ order.total_amount|floatformat:2 }}</td>
+                    <td>{{ order.status }}</td>
+                    <td>{{ order.created_at|date:"d M, Y" }}</td>
+                    {# --- YAHAN BADLAAV KIYA GAYA HAI --- #}
+                    <td><a href="{% url 'dashboard_order_detail' order.order_id %}">View Details</a></td>
+                </tr>
+                {% empty %}
+                {# ... #}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</body>
+
+</html>
