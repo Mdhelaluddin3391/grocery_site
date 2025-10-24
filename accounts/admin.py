@@ -1,8 +1,7 @@
-# accounts/admin.py (FINAL UPDATED CODE - Dashboard removed)
+# accounts/admin.py (FINAL CLEANED CODE)
 
 from django.contrib import admin
-# StaffAccount aur CustomerAccount ka import hataya gaya
-from .models import UserProfile, Address 
+from .models import UserProfile, Address # Proxy models ka import hataya gaya
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
 
@@ -12,11 +11,10 @@ class UserProfileInline(admin.StackedInline):
     can_delete = False
     verbose_name_plural = 'Profile Details'
     fk_name = 'user'
-    # Profile mein sirf phone number aur address ko edit karne ki anumati
     fields = ('phone_number', 'address') 
 
 
-# --- Custom User Admin Class (Ab yeh Staff aur Customer dono ke liye kaam karega) ---
+# --- Custom User Admin Class (Jo UserProfile Inline ko jodega) ---
 class CustomUserAdmin(UserAdmin):
     # UserAdmin ke default list_display mein phone number jodein
     list_display = UserAdmin.list_display + ('get_phone_number',)
@@ -25,6 +23,7 @@ class CustomUserAdmin(UserAdmin):
 
     # UserProfile se phone number fetch karne ka custom method
     def get_phone_number(self, obj):
+        # Superuser ke liye default 'N/A' return karein
         return obj.profile.phone_number if hasattr(obj, 'profile') else 'N/A'
     get_phone_number.short_description = 'Phone Number'
 
@@ -34,7 +33,7 @@ class AddressAdmin(admin.ModelAdmin):
     list_display = ('user', 'address_line_1', 'city', 'pincode', 'address_type', 'is_default')
     list_filter = ('is_default', 'city', 'address_type')
     search_fields = ('user__username', 'address_line_1', 'pincode')
-    list_editable = ('is_default',) # List se hi default status badal sakte hain
+    list_editable = ('is_default',)
     raw_id_fields = ('user',)
 
 # --- Registration ---
@@ -48,6 +47,5 @@ except admin.sites.NotRegistered:
 # Ab default User model ko CustomUserAdmin के साथ register karein.
 admin.site.register(User, CustomUserAdmin) 
 
-admin.site.register(UserProfile) # UserProfile ko alag se rakhein
+admin.site.register(UserProfile) 
 admin.site.register(Address, AddressAdmin)
-# Proxy models (StaffAccount, CustomerAccount) ki registration hata di gayi hai.

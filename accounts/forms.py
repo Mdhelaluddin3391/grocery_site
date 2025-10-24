@@ -1,10 +1,9 @@
-# mdhelaluddin3391/grocery_site/grocery_site-b7c9b0ae8a697f4fa8e0b4620ececbe3ab919e2a/accounts/forms.py
+# accounts/forms.py (FINAL CLEANED CODE)
 
 from django import forms
 from .models import Address, UserProfile
 from django.contrib.auth.models import User
-from django.contrib.auth.forms import AuthenticationForm # <--- YEH NAYI IMPORT LINE ZAROOR JODEIN!
-
+# AuthenticationForm का import hataya gaya
 
 # --- Naye Login/Signup Forms ---
 class PhoneNumberForm(forms.Form):
@@ -13,7 +12,7 @@ class PhoneNumberForm(forms.Form):
 class OTPForm(forms.Form):
     otp = forms.CharField(max_length=6, required=True, widget=forms.TextInput(attrs={'placeholder': 'Enter 6-digit OTP'}))
 
-
+# StaffLoginForm class yahan se hata di gayi hai.
 
 # --- Profile aur Address se Jude Zaroori Forms ---
 
@@ -35,7 +34,7 @@ class UserUpdateForm(forms.ModelForm):
         model = User
         fields = ['first_name', 'last_name', 'email']
 
-# User ka phone number update karne ke liye
+# User ka phone number update karne ke liye (Ab yeh form खाली है)
 class UserProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = UserProfile

@@ -1,3 +1,5 @@
+# accounts/models.py (FINAL CLEANED CODE)
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
@@ -47,15 +49,10 @@ class Address(models.Model):
 
         super().save(*args, **kwargs)
 
-
+# StaffAccount aur CustomerAccount proxy models yahan se hata diye gaye hain.
 
 # Jab bhi koi naya User bane, uska UserProfile automatically ban jaye
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
-    if created:
+    if created and not instance.is_superuser:
         UserProfile.objects.create(user=instance)
-
-# --- YEH FUNCTION HATA DIYA GAYA HAI KYUNKI YEH ERROR DE RAHA THA ---
-# @receiver(post_save, sender=User)
-# def save_user_profile(sender, instance, **kwargs):
-#     instance.profile.save()

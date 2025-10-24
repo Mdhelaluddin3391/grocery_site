@@ -1,4 +1,4 @@
-# mdhelaluddin3391/grocery_site/grocery_site-b7c9b0ae8a697f4fa8e0b4620ececbe3ab919e2a/accounts/views.py
+# accounts/views.py (FINAL CLEANED CODE)
 
 import random
 from django.shortcuts import render, redirect, get_object_or_404
@@ -10,16 +10,16 @@ from django.db import transaction
 from .models import UserProfile, Address
 from cart.models import Order
 
-# Zaroori Forms aur Models ko import karein
+# StaffLoginForm ka import hataya gaya
 from .forms import (
     PhoneNumberForm, 
     OTPForm, 
     AddressForm, 
     UserUpdateForm, 
     UserProfileUpdateForm,
-
 )
 
+# staff_login_view function yahan se hata diya gaya hai.
 
 # --- Naya Phone Number + OTP Login/Signup System ---
 
@@ -27,7 +27,8 @@ def phone_login(request):
     """User se phone number leta hai aur OTP bhejta hai."""
     if request.user.is_authenticated:
         return redirect('home')
-
+        
+    # is_staff check aur redirect hataya gaya
         
     if request.method == 'POST':
         form = PhoneNumberForm(request.POST)
@@ -47,8 +48,7 @@ def phone_login(request):
     return render(request, 'accounts/phone_login.html', {'form': form})
 
 
-# --- YEH VIEW POORI TARAH SE UPDATE KIYA GAYA HAI ---
-@transaction.atomic # Database operations ko safe rakhne ke liye
+@transaction.atomic 
 def verify_otp(request):
     """User se OTP leta hai, verify karta hai, aur login/create karta hai."""
     if request.user.is_authenticated:
@@ -82,8 +82,14 @@ def verify_otp(request):
 
                     user.save()
                     
-                    user.profile.phone_number = phone_number
-                    user.profile.save()
+                    # UserProfile ab signal से बनता है, यह सुनिश्चित करते हुए कि वह superuser नहीं है।
+                    # यहां सिर्फ phone_number अपडेट करना है।
+                    try:
+                        user.profile.phone_number = phone_number
+                        user.profile.save()
+                    except UserProfile.DoesNotExist:
+                        # यह तब होगा जब यह Superuser हो, इसलिए इसे अनदेखा करें
+                        pass 
                 
                 login(request, user)
                 messages.success(request, 'Welcome! You are logged in successfully.')
@@ -91,23 +97,30 @@ def verify_otp(request):
                 del request.session['phone_number']
                 del request.session['otp']
                 
-                return redirect('home') # Yahan se 302 Redirect hona chahiye
+                return redirect('home') 
             else:
                 messages.error(request, 'Invalid OTP. Please try again.')
-                # Galat OTP par wahi page dobara dikhega (200 OK)
     
     form = OTPForm()
     return render(request, 'accounts/verify_otp.html', {'form': form})
 
 
-# --- Baaki ke sabhi views waise hi rahenge ---
 def logout_view(request):
     logout(request)
     messages.info(request, "You have been logged out.")
     return redirect('home')
 
-@login_required
+@login_required(login_url='/accounts/login/')
 def profile_view(request):
+    user = request.user
+    # Ensure profile exists before trying to access it (though signal should ensure it)
+    if user.is_superuser or not hasattr(user, 'profile'):
+        if user.is_authenticated:
+            # यदि Admin गलती से यहां आ गया है, तो उसका session तोड़ दो
+            logout(request) 
+            messages.info(request, "Admin session terminated. Please use customer login for shopping.")
+        return redirect('home')
+
     orders = Order.objects.filter(user=request.user).order_by('-created_at')
     addresses = Address.objects.filter(user=request.user)
     address_form = AddressForm()
@@ -131,7 +144,6 @@ def add_address(request):
             messages.error(request, 'Please correct the errors below.')
     return redirect('profile')
 
-# ... (edit_address, delete_address, etc. sabhi views yahan rahenge)
 @login_required
 def edit_address(request, address_id):
     address = get_object_or_404(Address, id=address_id, user=request.user)

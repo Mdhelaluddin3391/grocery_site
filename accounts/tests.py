@@ -1,6 +1,5 @@
-from django.test import TestCase
+# accounts/tests.py (FINAL FIX)
 
-# Create your tests here.
 from django.test import TestCase, Client
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -18,29 +17,30 @@ class AccountsViewsTestCase(TestCase):
             email='test@example.com',
             password='password123'
         )
-        self.user.is_active = True # Test ke liye user ko active maan rahe hain
+        self.user.is_active = True 
         self.user.save()
+        
+        # FIX: UserProfile अब signal से बनता है (models.py में)। 
+        # यहां हम केवल उस बनाए गए profile पर phone_number सेट कर रहे हैं।
+        try:
+            profile = UserProfile.objects.get(user=self.user)
+            profile.phone_number = '1234567890'
+            profile.save()
+        except UserProfile.DoesNotExist:
+            # यह superuser के लिए हो सकता है (जो test में नहीं होना चाहिए)
+            pass
 
     def test_login_view(self):
         """Test karein ki login page sahi se kaam kar raha hai."""
+        # Note: यह अब OTP flow को टेस्ट करने के लिए सिर्फ़ एक starting point है।
         response = self.client.get(reverse('login'))
-        self.assertEqual(response.status_code, 200) # Check karein ki page khul raha hai
-        self.assertTemplateUsed(response, 'accounts/login.html') # Check karein ki sahi template use ho raha hai
-
-        # Sahi details se login karke dekhein
-        response = self.client.post(reverse('login'), {'username': 'testuser', 'password': 'password123'})
-        self.assertEqual(response.status_code, 302) # Login ke baad redirect hona chahiye
-        self.assertRedirects(response, reverse('home'))
-
-        # Galat details se login karke dekhein
-        response = self.client.post(reverse('login'), {'username': 'testuser', 'password': 'wrongpassword'})
-        self.assertEqual(response.status_code, 200) # Page reload hona chahiye
-        self.assertContains(response, 'Please enter a correct username and password.') # Error message aana chahiye
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'accounts/phone_login.html') 
 
     def test_profile_view_redirects_if_not_logged_in(self):
         """Test karein ki bina login ke profile page access nahi ho sakta."""
         response = self.client.get(reverse('profile'))
-        self.assertEqual(response.status_code, 302) # Redirect hona chahiye
+        self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, f"{reverse('login')}?next={reverse('profile')}")
 
     def test_profile_view_accessible_if_logged_in(self):
@@ -57,7 +57,6 @@ class AccountsViewsTestCase(TestCase):
         response = self.client.get(reverse('logout'))
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse('home'))
-        # Check karein ki user ab login nahi hai
         self.assertFalse('_auth_user_id' in self.client.session)
 
 
@@ -111,7 +110,6 @@ class AddressModelTestCase(TestCase):
             is_default=True
         )
 
-        # address1 ko database se dobara fetch karein
         address1.refresh_from_db()
 
         self.assertFalse(address1.is_default)
