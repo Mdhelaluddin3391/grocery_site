@@ -1,0 +1,15 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Login / Register with Phone{% endblock title %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 40px auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+    <h2>Login or Create Account</h2>
+    <p>Please enter your phone number to receive an OTP.</p>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }} {# Yahan par PhoneNumberForm dikhega #}
+        <button type="submit" style="width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px;">Send OTP</button>
+    </form>
+</div>
+{% endblock content %}

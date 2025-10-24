@@ -1,91 +1,109 @@
-# accounts/views.py
+# mdhelaluddin3391/grocery_site/grocery_site-b7c9b0ae8a697f4fa8e0b4620ececbe3ab919e2a/accounts/views.py
 
+import random
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, authenticate, logout
-from .forms import CustomUserCreationForm, CustomAuthenticationForm, AddressForm, UserUpdateForm, UserProfileUpdateForm
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
-from cart.models import Order
-from .models import Address
 from django.contrib import messages
-# --- EMAIL VERIFICATION KE LIYE IMPORTS ---
-from django.contrib.sites.shortcuts import get_current_site
-from django.template.loader import render_to_string
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes, force_str
-from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import EmailMessage
-from django.contrib.auth import get_user_model
-# JSON aur render_to_string ki ab zaroorat nahi
-# from django.http import JsonResponse
-# from django.template.loader import render_to_string
+from django.contrib.auth.models import User
+from django.db import transaction
 
-# --- AUTHENTICATION VIEWS (No Changes) ---
-# --- UPDATED REGISTER VIEW ---
-def register_view(request):
-    if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-            user.is_active = False # User ko inactive banayein
-            user.save()
-            
-            # Activation email bhejein
-            current_site = get_current_site(request)
-            mail_subject = 'Activate your account.'
-            message = render_to_string('accounts/activation_email.html', {
-                'user': user,
-                'domain': current_site.domain,
-                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-                'token': default_token_generator.make_token(user),
-            })
-            to_email = form.cleaned_data.get('email')
-            email = EmailMessage(mail_subject, message, to=[to_email])
-            email.send()
-            
-            # User ko batayein ki email check kare
-            return render(request, 'accounts/register_done.html')
-    else:
-        form = CustomUserCreationForm()
-    return render(request, 'accounts/register.html', {'form': form})
+# Zaroori Forms aur Models ko import karein
+from .forms import (
+    PhoneNumberForm, 
+    OTPForm, 
+    AddressForm, 
+    UserUpdateForm, 
+    UserProfileUpdateForm
+)
+from .models import UserProfile, Address
+from cart.models import Order
 
-# --- NAYA ACTIVATION VIEW ---
-def activate(request, uidb64, token):
-    User = get_user_model()
-    try:
-        uid = force_str(urlsafe_base64_decode(uidb64))
-        user = User.objects.get(pk=uid)
-    except(TypeError, ValueError, OverflowError, User.DoesNotExist):
-        user = None
-    
-    if user is not None and default_token_generator.check_token(user, token):
-        user.is_active = True
-        user.save()
-        login(request, user)
-        messages.success(request, 'Congratulations! Your account is now active.')
+
+# --- Naya Phone Number + OTP Login/Signup System ---
+
+def phone_login(request):
+    """User se phone number leta hai aur OTP bhejta hai."""
+    if request.user.is_authenticated:
         return redirect('home')
-    else:
-        return render(request, 'accounts/activation_failed.html')
-
-def login_view(request):
+        
     if request.method == 'POST':
-        form = CustomAuthenticationForm(request, data=request.POST)
+        form = PhoneNumberForm(request.POST)
         if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                login(request, user)
-                return redirect('home')
+            phone_number = form.cleaned_data['phone_number']
+            otp = random.randint(100000, 999999)
+            
+            print(f" OTP for {phone_number} is {otp} ")
+            
+            request.session['phone_number'] = phone_number
+            request.session['otp'] = otp
+            
+            messages.info(request, 'An OTP has been sent. Please check the console.')
+            return redirect('verify_otp')
     else:
-        form = CustomAuthenticationForm()
-    return render(request, 'accounts/login.html', {'form': form})
+        form = PhoneNumberForm()
+    return render(request, 'accounts/phone_login.html', {'form': form})
 
+
+# --- YEH VIEW POORI TARAH SE UPDATE KIYA GAYA HAI ---
+@transaction.atomic # Database operations ko safe rakhne ke liye
+def verify_otp(request):
+    """User se OTP leta hai, verify karta hai, aur login/create karta hai."""
+    if request.user.is_authenticated:
+        return redirect('home')
+
+    phone_number = request.session.get('phone_number')
+    session_otp = request.session.get('otp')
+
+    if not phone_number or not session_otp:
+        messages.error(request, 'Please enter your phone number first.')
+        return redirect('phone_login')
+
+    if request.method == 'POST':
+        form = OTPForm(request.POST)
+        if form.is_valid():
+            user_otp = int(form.cleaned_data['otp'])
+            
+            if str(user_otp) == str(session_otp):
+                try:
+                    profile = UserProfile.objects.get(phone_number=phone_number)
+                    user = profile.user
+                except UserProfile.DoesNotExist:
+                    username = f'user_{phone_number}'
+                    counter = 1
+                    while User.objects.filter(username=username).exists():
+                        username = f'user_{phone_number}_{counter}'
+                        counter += 1
+                    
+                    user = User.objects.create_user(username=username)
+                    user.set_unusable_password()
+
+                    user.save()
+                    
+                    user.profile.phone_number = phone_number
+                    user.profile.save()
+                
+                login(request, user)
+                messages.success(request, 'Welcome! You are logged in successfully.')
+                
+                del request.session['phone_number']
+                del request.session['otp']
+                
+                return redirect('home') # Yahan se 302 Redirect hona chahiye
+            else:
+                messages.error(request, 'Invalid OTP. Please try again.')
+                # Galat OTP par wahi page dobara dikhega (200 OK)
+    
+    form = OTPForm()
+    return render(request, 'accounts/verify_otp.html', {'form': form})
+
+
+# --- Baaki ke sabhi views waise hi rahenge ---
 def logout_view(request):
     logout(request)
+    messages.info(request, "You have been logged out.")
     return redirect('home')
 
-
-# --- PROFILE AND ADDRESS VIEWS (Reverted to simple version) ---
 @login_required
 def profile_view(request):
     orders = Order.objects.filter(user=request.user).order_by('-created_at')
@@ -109,8 +127,9 @@ def add_address(request):
             messages.success(request, 'Address added successfully!')
         else:
             messages.error(request, 'Please correct the errors below.')
-    return redirect('profile') # Hamesha profile page par redirect karega
+    return redirect('profile')
 
+# ... (edit_address, delete_address, etc. sabhi views yahan rahenge)
 @login_required
 def edit_address(request, address_id):
     address = get_object_or_404(Address, id=address_id, user=request.user)
@@ -127,46 +146,28 @@ def edit_address(request, address_id):
 @login_required
 def delete_address(request, address_id):
     address = get_object_or_404(Address, id=address_id, user=request.user)
-    
-    if request.user.addresses.count() <= 1:
-        messages.error(request, 'You cannot delete your only address. Please edit it instead.')
-        return redirect('profile')
-
-    if address.is_default:
-        messages.error(request, 'You cannot delete your default address. Please set another address as default first.')
-        return redirect('profile')
-
     if request.method == 'POST':
-        address.delete()
-        messages.success(request, 'Address deleted successfully!')
-    
-    return redirect('profile') # Hamesha profile page par redirect karega
-
+        if request.user.addresses.count() <= 1:
+            messages.error(request, 'You cannot delete your only address.')
+        elif address.is_default:
+            messages.error(request, 'You cannot delete your default address.')
+        else:
+            address.delete()
+            messages.success(request, 'Address deleted successfully!')
+    return redirect('profile')
 
 @login_required
 def set_default_address(request, address_id):
-    # Sabse pehle, user ke sabhi addresses ko non-default set karein
-    request.user.addresses.update(is_default=False)
-    
-    # Fir, chune gaye address ko default set karein
     address = get_object_or_404(Address, id=address_id, user=request.user)
     address.is_default = True
     address.save()
-    
-    messages.success(request, f'Address "{address.address_line_1}" has been set as default.')
+    messages.success(request, f'Address has been set as default.')
     return redirect('profile')
 
-
-# --- Other views (No Changes) ---
 @login_required
 def order_detail_view(request, order_id):
-    order = get_object_or_404(
-        Order.objects.prefetch_related('items', 'items__product'), 
-        order_id=order_id, 
-        user=request.user
-    )
-    context = {'order': order}
-    return render(request, 'accounts/order_detail.html', context)
+    order = get_object_or_404(Order.objects.prefetch_related('items', 'items__product'), order_id=order_id, user=request.user)
+    return render(request, 'accounts/order_detail.html', {'order': order})
 
 @login_required
 def edit_profile_view(request):
