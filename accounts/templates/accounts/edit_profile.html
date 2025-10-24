@@ -15,7 +15,13 @@
         {{ user_form.as_p }}
         
         <h4 style="margin-top: 20px;">Contact Information</h4>
-        {{ profile_form.as_p }}
+        
+        {# --- YAHAN BADLAV KIYA GAYA HAI --- #}
+        <div style="padding: 10px; background-color: #f5f5f5; border-radius: 5px; margin-bottom: 15px;">
+            <strong>Phone Number:</strong>
+            <p style="margin: 5px 0 0 0;">{{ user.profile.phone_number }}</p>
+            <small style="color: #6c757d;">Your phone number is your unique identifier and cannot be changed.</small>
+        </div>
         
         <div style="display: flex; gap: 10px; margin-top: 20px;">
             <button type="submit" style="flex-grow: 1; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem;">Save Changes</button>
