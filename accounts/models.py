@@ -43,7 +43,7 @@ class Address(models.Model):
         # Agar is address ko default banaya ja raha hai
         elif self.is_default:
             # To user ke baaki sabhi addresses ko non-default kar do
-            self.user.addresses.update(is_default=False)
+            self.user.addresses.exclude(pk=self.pk).update(is_default=False)
 
         super().save(*args, **kwargs)
 
@@ -54,6 +54,7 @@ def create_user_profile(sender, instance, created, **kwargs):
     if created:
         UserProfile.objects.create(user=instance)
 
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    instance.profile.save()
+# --- YEH FUNCTION HATA DIYA GAYA HAI KYUNKI YEH ERROR DE RAHA THA ---
+# @receiver(post_save, sender=User)
+# def save_user_profile(sender, instance, **kwargs):
+#     instance.profile.save()
