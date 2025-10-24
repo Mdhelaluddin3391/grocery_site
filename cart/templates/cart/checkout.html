@@ -1,5 +1,3 @@
-{# mdhelaluddin3391/grocery_site/grocery_site-f1f6d422192c0e0c4879eb55c3d620164920b56e/cart/templates/cart/checkout.html #}
-
 {% extends 'store/base.html' %}
 {% load static %}
 
@@ -23,6 +21,8 @@
     #map { height: 300px; width: 100%; margin-bottom: 20px; border-radius: 8px; border: 1px solid #ccc; background-color: #f0f0f0; }
     .location-btn-container { text-align: center; margin: 20px 0; }
     .location-btn { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; }
+    .payment-option.disabled { cursor: not-allowed; background-color: #f8f9fa; }
+    .payment-option.disabled label { color: #6c757d; }
 </style>
 {% endblock extra_css %}
 
@@ -51,10 +51,13 @@
 
             <label for="new-address-radio" class="address-card">
                 <input type="radio" name="address_choice" value="new" id="new-address-radio" {% if not addresses %}checked{% endif %}>
-                <strong>{% if addresses %}Add a New Address{% else %}Enter your Address{% endif %}</strong>
+                <strong>Add a New Address</strong>
             </label>
 
             <div id="new-address-form" style="margin-top: 15px; {% if addresses %}display:none;{% endif %}">
+                <p style="text-align: center; color: #555; margin: 15px 0;">
+                    Aap niche diye gaye map se apni location chun sakte hain ya form bhar kar address save kar sakte hain.
+                </p>
                 <div class="location-btn-container">
                     <button type="button" class="location-btn" onclick="getLocation()">📍 Use My Current Location</button>
                 </div>
@@ -69,9 +72,9 @@
                 <input type="radio" id="cod" name="payment_method" value="COD" checked>
                 <label for="cod">Cash on Delivery (COD)</label>
             </label>
-            <label for="upi" class="payment-option">
-                <input type="radio" id="upi" name="payment_method" value="UPI">
-                <label for="upi">UPI / Online Payment</label>
+            <label for="upi" class="payment-option disabled">
+                <input type="radio" id="upi" name="payment_method" value="UPI" disabled>
+                <label for="upi">UPI / Online Payment (Currently Unavailable)</label>
             </label>
         </div>
 
@@ -99,15 +102,24 @@
         });
     });
 
-    // Payment option selection logic
+    // Payment and address option selection logic
     document.querySelectorAll('.payment-option, .address-card').forEach(function(el) {
         el.addEventListener('click', function() {
+            // Agar element disabled hai to kuch na karein
+            if (this.classList.contains('disabled')) {
+                return;
+            }
+            
             // Remove 'selected' from siblings of the same type
             const parent = this.parentElement;
             parent.querySelectorAll('.' + this.className.split(' ')[0]).forEach(p => p.classList.remove('selected'));
             
             this.classList.add('selected');
-            this.querySelector('input[type="radio"]').checked = true;
+            const radioInput = this.querySelector('input[type="radio"]');
+            if(radioInput && !radioInput.disabled) {
+                radioInput.checked = true;
+            }
+
             // Trigger change event for address logic
             if(this.querySelector('input[name="address_choice"]')) {
                  this.querySelector('input[name="address_choice"]').dispatchEvent(new Event('change'));
@@ -120,7 +132,7 @@
     let map;
     let marker;
 
-    function initMap(lat = 12.9716, lng = 77.5946) { // Default to Bengaluru
+    function initMap(lat = 24.3725, lng = 92.1661) { // Default to Dharmanagar
         const defaultLocation = { lat: lat, lng: lng };
         map = new google.maps.Map(document.getElementById("map"), { center: defaultLocation, zoom: 15 });
         marker = new google.maps.Marker({ position: defaultLocation, map: map, draggable: true });
