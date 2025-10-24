@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
         input.addEventListener('blur', () => searchBar.style.backgroundColor = '#f3f3f3');
     }
 
-    // 2. Promo Card Auto-Swipe Logic
+    // 2. Promo Card Auto-Swipe Logic (UPDATED TO PREVENT PAGE JUMP)
     const scrollBanner = document.querySelector('.scroll-banner');
     if (scrollBanner) {
         let currentCardIndex = 0;
@@ -18,12 +18,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (promoCards.length > 1) {
             setInterval(() => {
                 currentCardIndex = (currentCardIndex + 1) % promoCards.length;
-                promoCards[currentCardIndex].scrollIntoView({
-                    behavior: 'smooth',
-                    inline: 'start',
-                    block: 'nearest'
-                });
-            }, 3000);
+                
+                // --- YAHAN BADLAV KIYA GAYA HAI ---
+                // Purana code page ko scroll kar raha tha.
+                // Naya code sirf banner ke content ko scroll karega.
+                const nextCard = promoCards[currentCardIndex];
+                scrollBanner.scrollLeft = nextCard.offsetLeft;
+
+            }, 3000); 
         }
     }
 
