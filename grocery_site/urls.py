@@ -23,5 +23,5 @@ urlpatterns = [
     path('', include('store.urls')), 
     path('cart/', include('cart.urls')),
     path('accounts/', include('accounts.urls')),
-    path('dashboard/', include('dashboard.urls')), # <-- YEH NAYI LINE JODEIN
+    
 ]

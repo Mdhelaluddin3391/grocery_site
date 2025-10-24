@@ -47,26 +47,7 @@ class Address(models.Model):
 
         super().save(*args, **kwargs)
 
-class StaffAccount(User):
-    """
-    Ek Proxy model jo Admin panel mein 'Staff Accounts' ke liye
-    alag section banane ke liye use hota hai.
-    """
-    class Meta:
-        proxy = True
-        verbose_name = 'Staff Account'
-        verbose_name_plural = 'Staff Accounts'
-# --- NAYA CODE: Proxy Model for Customer Management ---
-class CustomerAccount(User):
-    """
-    Ek Proxy model jo Admin panel mein 'Customer Accounts' ke liye
-    alag section banane ke liye use hota hai (non-staff users).
-    """
-    class Meta:
-        proxy = True
-        verbose_name = 'Customer Account'
-        verbose_name_plural = 'Customer Accounts'
-# --- END NAYA CODE ---
+
 
 # Jab bhi koi naya User bane, uska UserProfile automatically ban jaye
 @receiver(post_save, sender=User)

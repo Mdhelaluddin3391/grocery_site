@@ -17,37 +17,8 @@ from .forms import (
     AddressForm, 
     UserUpdateForm, 
     UserProfileUpdateForm,
-    StaffLoginForm
+
 )
-
-
-def staff_login_view(request):
-    """Staff users ke liye standard username/password login."""
-    if request.user.is_authenticated:
-        if request.user.is_staff:
-            return redirect('dashboard_home')
-        else:
-            logout(request)
-            messages.info(request, "Please use the customer login or staff portal.")
-
-    if request.method == 'POST':
-        form = StaffLoginForm(request, data=request.POST)
-        if form.is_valid():
-            user = form.get_user()
-            if user is not None and user.is_staff:
-                login(request, user)
-                messages.success(request, f'Welcome, Staff user {user.username}.')
-                return redirect('dashboard_home')
-            elif user is not None and not user.is_staff:
-                messages.error(request, 'Access denied. Only authorized staff members can login here.')
-            else:
-                messages.error(request, 'Invalid login credentials.')
-        else:
-            messages.error(request, 'Invalid login credentials.')
-    else:
-        form = StaffLoginForm()
-        
-    return render(request, 'accounts/staff_login.html', {'form': form})
 
 
 # --- Naya Phone Number + OTP Login/Signup System ---
@@ -56,9 +27,7 @@ def phone_login(request):
     """User se phone number leta hai aur OTP bhejta hai."""
     if request.user.is_authenticated:
         return redirect('home')
-        
-    if request.user.is_authenticated and request.user.is_staff: # <-- ADDED CHECK
-        return redirect('staff_login')
+
         
     if request.method == 'POST':
         form = PhoneNumberForm(request.POST)

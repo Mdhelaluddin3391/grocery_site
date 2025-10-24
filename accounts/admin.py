@@ -1,7 +1,8 @@
-# accounts/admin.py (FINAL UPDATED CODE)
+# accounts/admin.py (FINAL UPDATED CODE - Dashboard removed)
 
 from django.contrib import admin
-from .models import UserProfile, Address, StaffAccount, CustomerAccount # CustomerAccount ko import karein
+# StaffAccount aur CustomerAccount ka import hataya gaya
+from .models import UserProfile, Address 
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
 
@@ -15,62 +16,17 @@ class UserProfileInline(admin.StackedInline):
     fields = ('phone_number', 'address') 
 
 
-# --- Admin Class for Staff Accounts (pichle step se thoda sa update) ---
-class StaffAccountAdmin(UserAdmin):
-    list_display = ('username', 'email', 'first_name', 'last_name', 'is_active', 'last_login')
-    search_fields = ('username', 'first_name', 'last_name', 'email')
-    ordering = ('username',)
-    inlines = [UserProfileInline] # Staff ke profile ko bhi dikhao
+# --- Custom User Admin Class (Ab yeh Staff aur Customer dono ke liye kaam karega) ---
+class CustomUserAdmin(UserAdmin):
+    # UserAdmin ke default list_display mein phone number jodein
+    list_display = UserAdmin.list_display + ('get_phone_number',)
+    # inlines mein UserProfileInline jodein
+    inlines = [UserProfileInline] 
 
-    fieldsets = (
-        (None, {'fields': ('username', 'password')}),
-        ('Personal info', {'fields': ('first_name', 'last_name', 'email')}),
-        ('Permissions', {
-            'fields': ('is_active', 'groups', 'user_permissions'),
-        }),
-        ('Important dates', {'fields': ('last_login', 'date_joined')}),
-    )
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        return qs.filter(is_staff=True)
-
-    def save_model(self, request, obj, form, change):
-        obj.is_staff = True
-        if not change:
-            obj.is_superuser = False
-        super().save_model(request, obj, form, change)
-
-
-# --- NAYA CODE: Admin Class for Customer Accounts (Non-Staff) ---
-class CustomerAccountAdmin(UserAdmin):
-    list_display = ('username', 'email', 'first_name', 'last_name', 'is_active', 'last_login', 'get_phone_number')
-    list_filter = ('is_active', 'is_superuser')
-    search_fields = ('username', 'email', 'userprofile__phone_number') # Profile se search karein
-    ordering = ('username',)
-    inlines = [UserProfileInline] # Customer profile ko yahan jodein
-
-    fieldsets = (
-        (None, {'fields': ('username', 'password')}),
-        ('Personal Info & Contact', {'fields': ('first_name', 'last_name', 'email')}),
-        ('Status', {'fields': ('is_active',)}), 
-    )
-    
     # UserProfile se phone number fetch karne ka custom method
     def get_phone_number(self, obj):
         return obj.profile.phone_number if hasattr(obj, 'profile') else 'N/A'
     get_phone_number.short_description = 'Phone Number'
-
-    # QuerySet ko filter karein (Sirf non-staff users)
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        return qs.filter(is_staff=False)
-
-    # Naye user banate waqt is_staff ko False set karein
-    def save_model(self, request, obj, form, change):
-        obj.is_staff = False
-        obj.is_superuser = False
-        super().save_model(request, obj, form, change)
 
 
 # --- Address Model Admin (Improved) ---
@@ -83,14 +39,15 @@ class AddressAdmin(admin.ModelAdmin):
 
 # --- Registration ---
 
-# Default User model ko unregister karein taki hum apne custom models ko use kar sakein
+# Default User model ko unregister karein taki hum apne custom class ko use kar sakein
 try:
     admin.site.unregister(User)
 except admin.sites.NotRegistered:
     pass 
 
-# Ab Admin Panel mein 'Customer Accounts' aur 'Staff Accounts' do alag sections honge.
+# Ab default User model ko CustomUserAdmin के साथ register karein.
+admin.site.register(User, CustomUserAdmin) 
+
 admin.site.register(UserProfile) # UserProfile ko alag se rakhein
 admin.site.register(Address, AddressAdmin)
-admin.site.register(StaffAccount, StaffAccountAdmin)
-admin.site.register(CustomerAccount, CustomerAccountAdmin)
+# Proxy models (StaffAccount, CustomerAccount) ki registration hata di gayi hai.
