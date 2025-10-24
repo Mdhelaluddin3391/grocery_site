@@ -6,6 +6,9 @@ from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.db.models import Q
+from django.http import JsonResponse
+from django.conf import settings
+from math import radians, sin, cos, sqrt, atan2
 
 def get_main_categories():
     """Helper function to get main categories for the header."""
@@ -111,3 +114,47 @@ def search_results(request):
         'main_categories': get_main_categories(), # Header ke liye
     }
     return render(request, 'store/search_results.html', context)
+
+
+def calculate_distance(lat1, lon1, lat2, lon2):
+    """Haversine formula se do points ke beech distance (km mein) calculate karein."""
+    R = 6371  # Earth ka radius in km
+
+    dLat = radians(lat2 - lat1)
+    dLon = radians(lon2 - lon1)
+    lat1 = radians(lat1)
+    lat2 = radians(lat2)
+
+    a = sin(dLat / 2)**2 + cos(lat1) * cos(lat2) * sin(dLon / 2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+    return R * c
+
+def get_delivery_info(request):
+    """User ki location ke basis par delivery time return karein."""
+    try:
+        user_lat = float(request.GET.get('lat'))
+        user_lng = float(request.GET.get('lng'))
+    except (TypeError, ValueError):
+        return JsonResponse({'error': 'Invalid coordinates'}, status=400)
+
+    store_coords = settings.STORE_COORDINATES
+    store_lat = store_coords['lat']
+    store_lng = store_coords['lng']
+    
+    distance = calculate_distance(user_lat, user_lng, store_lat, store_lng)
+    
+    delivery_time = ""
+    if distance <= 2:
+        delivery_time = "10 minutes"
+    elif 2 < distance <= 3:
+        delivery_time = "15 minutes"
+    elif 3 < distance <= 5:
+        delivery_time = "20 minutes"
+    else:
+        # Agar 5km se zyada door hai
+        delivery_time = "30+ minutes"
+        
+    message = f"Delivery in {delivery_time} • {settings.STORE_LOCATION_NAME}"
+    
+    return JsonResponse({'delivery_message': message})

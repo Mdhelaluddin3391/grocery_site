@@ -147,3 +147,9 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # EMAIL_USE_TLS = True
 # EMAIL_HOST_USER = 'your-email@gmail.com'  # Aapka email
 # EMAIL_HOST_PASSWORD = 'your-app-password' # Aapka app password
+
+STORE_LOCATION_NAME = "Dharmanagar"
+STORE_COORDINATES = {
+    "lat": 24.3725,  # Dharmanagar, Tripura ka lagbhag latitude
+    "lng": 92.1661,  # Dharmanagar, Tripura ka lagbhag longitude
+}

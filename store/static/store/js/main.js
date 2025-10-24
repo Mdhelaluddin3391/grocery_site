@@ -128,4 +128,34 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         observer.observe(loadMoreTrigger);
     }
+
+    // 5. Dynamic Delivery Time Logic (YEH NAYA CODE HAI)
+    const deliveryInfoSpan = document.getElementById('delivery-info');
+
+    const successCallback = (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        // Django view ko AJAX call karein
+        fetch(`/ajax/get-delivery-info/?lat=${lat}&lng=${lng}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.delivery_message && deliveryInfoSpan) {
+                    deliveryInfoSpan.textContent = data.delivery_message;
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching delivery info:", error);
+            });
+    };
+
+    const errorCallback = (error) => {
+        console.warn(`Geolocation error: ${error.message}`);
+        // Agar user location deny karta hai, to default message hi dikhega
+    };
+
+    // Browser se location poochhein
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(successCallback, errorCallback);
+    }
 });
