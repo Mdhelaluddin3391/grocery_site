@@ -2,7 +2,7 @@
 
 from django.urls import path
 from . import views
-from django.contrib.auth.views import LogoutView # Django ke default LogoutView ka istemal kar sakte hain
+
 
 urlpatterns = [
     path('login/', views.phone_login, name='login'), # Phone number input

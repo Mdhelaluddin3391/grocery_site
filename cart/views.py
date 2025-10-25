@@ -1,20 +1,33 @@
-# cart/views.py (FINAL UPDATED CODE)
+# cart/views.py (FINAL UPDATED CODE with Custom Customer Auth)
 
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Cart, CartItem, Order, OrderItem
 from store.models import Product
-from django.contrib.auth.decorators import login_required
-from store.views import get_main_categories
 from django.db import transaction
-from accounts.models import Address
+from accounts.models import Address, Customer
 from accounts.forms import AddressForm
 from django.contrib import messages
+from store.views import get_main_categories
+from accounts.views import customer_login_required # Custom decorator
 
-@login_required
+# --- HELPER FUNCTION ---
+def get_current_customer(request):
+    """Session ID se Customer object retrieve karein."""
+    customer_id = request.session.get('customer_id')
+    if not customer_id:
+        # customer_login_required decorator ise sambhalega
+        return None 
+    return get_object_or_404(Customer, id=customer_id)
+# -----------------------
+
+
+@customer_login_required
 def add_to_cart(request, product_id):
+    customer = get_current_customer(request)
     product = get_object_or_404(Product, id=product_id)
-    cart, created = Cart.objects.get_or_create(user=request.user)
+    # Cart ab Customer se link hogi
+    cart, created = Cart.objects.get_or_create(customer=customer)
     cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
 
     is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
@@ -40,18 +53,20 @@ def add_to_cart(request, product_id):
     return redirect(request.META.get('HTTP_REFERER', 'home'))
 
 
-@login_required
+@customer_login_required
 def view_cart(request):
-    cart, created = Cart.objects.get_or_create(user=request.user)
+    customer = get_current_customer(request)
+    cart, created = Cart.objects.get_or_create(customer=customer)
     context = {
         'cart': cart,
         'main_categories': get_main_categories(),
     }
     return render(request, 'cart/cart_detail.html', context)
 
-@login_required
+@customer_login_required
 def remove_from_cart(request, item_id):
-    cart_item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
+    # Customer cart item delete kar raha hai
+    cart_item = get_object_or_404(CartItem, id=item_id, cart__customer=get_current_customer(request))
     item_id_for_json = cart_item.id
     cart = cart_item.cart
     cart_item.delete()
@@ -63,9 +78,9 @@ def remove_from_cart(request, item_id):
 
     return redirect('view_cart')
 
-@login_required
+@customer_login_required
 def increment_cart_item(request, item_id):
-    cart_item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
+    cart_item = get_object_or_404(CartItem, id=item_id, cart__customer=get_current_customer(request))
     if cart_item.product.stock > cart_item.quantity:
         cart_item.quantity += 1
         cart_item.save()
@@ -79,9 +94,9 @@ def increment_cart_item(request, item_id):
     })
     return JsonResponse(cart_data)
 
-@login_required
+@customer_login_required
 def decrement_cart_item(request, item_id):
-    cart_item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
+    cart_item = get_object_or_404(CartItem, id=item_id, cart__customer=get_current_customer(request))
     cart = cart_item.cart
     item_removed = False
     if cart_item.quantity > 1:
@@ -100,13 +115,15 @@ def decrement_cart_item(request, item_id):
     })
     return JsonResponse(cart_data)
 
-@login_required
+@customer_login_required
 def checkout(request):
-    cart = get_object_or_404(Cart, user=request.user)
+    customer = get_current_customer(request)
+    cart = get_object_or_404(Cart, customer=customer)
     if not cart.items.all().exists():
         return redirect('view_cart')
 
-    addresses = Address.objects.filter(user=request.user).order_by('-is_default')
+    # Addresses ab customer se linked hain
+    addresses = Address.objects.filter(customer=customer).order_by('-is_default')
     address_form = AddressForm()
     
     if request.method == 'POST':
@@ -115,13 +132,13 @@ def checkout(request):
 
         if address_choice == 'existing' and request.POST.get('selected_address'):
             address_id = request.POST.get('selected_address')
-            selected_address = get_object_or_404(Address, id=address_id, user=request.user)
+            selected_address = get_object_or_404(Address, id=address_id, customer=customer)
         
         elif address_choice == 'new':
             form = AddressForm(request.POST)
             if form.is_valid():
                 selected_address = form.save(commit=False)
-                selected_address.user = request.user
+                selected_address.customer = customer # Customer set karein
                 
                 lat = request.POST.get('latitude')
                 lng = request.POST.get('longitude')
@@ -146,7 +163,7 @@ def checkout(request):
                 )
                 
                 order = Order.objects.create(
-                    user=request.user,
+                    customer=customer, # Customer set karein
                     shipping_address=shipping_address_str,
                     total_amount=cart.get_grand_total(),
                     payment_method='COD',
@@ -172,6 +189,8 @@ def checkout(request):
             return redirect('order_successful', order_id=order.order_id)
         
         elif payment_method == 'UPI':
+            # Ab yahan customer_id session mein hai
+            request.session['shipping_address_id'] = selected_address.id 
             return redirect('process_payment')
 
         else:
@@ -179,14 +198,15 @@ def checkout(request):
 
     return render(request, 'cart/checkout.html', { 'cart': cart, 'addresses': addresses, 'address_form': address_form })
 
-@login_required
+@customer_login_required
 def process_payment(request):
     address_id = request.session.get('shipping_address_id')
     if not address_id:
         return redirect('checkout')
 
-    address = get_object_or_404(Address, id=address_id)
-    cart = get_object_or_404(Cart, user=request.user)
+    # Address ab customer se linked hai
+    address = get_object_or_404(Address, id=address_id, customer=get_current_customer(request))
+    cart = get_object_or_404(Cart, customer=get_current_customer(request))
     
     context = {
         'address': address,
@@ -194,9 +214,10 @@ def process_payment(request):
     }
     return render(request, 'cart/process_payment.html', context)
 
-@login_required
+@customer_login_required
 def order_successful(request, order_id):
-    order = get_object_or_404(Order, order_id=order_id, user=request.user)
+    # Order ab customer se linked hai
+    order = get_object_or_404(Order, order_id=order_id, customer=get_current_customer(request))
     context = {
         'order': order,
         'main_categories': get_main_categories(),

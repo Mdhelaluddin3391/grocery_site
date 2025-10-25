@@ -1,17 +1,20 @@
-# cart/context_processors.py
+# cart/context_processors.py (FINAL CODE - Customer Session)
 
 from .models import Cart
+from accounts.models import Customer
+from django.shortcuts import get_object_or_404
 
 def cart_item_count(request):
-    # Pehle check karo ki user login hai ya nahi
-    if request.user.is_authenticated:
+    # Pehle check karo ki Customer session mein hai ya nahi
+    if 'customer_id' in request.session:
         try:
-            # User ka cart dhundo
-            cart = Cart.objects.get(user=request.user)
-            # Cart ke sabhi items ki quantity ko jod do
+            # Customer ID se Customer object dhundo
+            customer = get_object_or_404(Customer, id=request.session['customer_id'])
+            # Us customer ka cart dhundo
+            cart = Cart.objects.get(customer=customer)
             item_count = sum(item.quantity for item in cart.items.all())
-        except Cart.DoesNotExist:
+        except (Cart.DoesNotExist, Customer.DoesNotExist):
             item_count = 0
         return {'cart_item_count': item_count}
-    # Agar user login nahi hai, to count 0 rakho
+    # Agar customer login nahi hai, to count 0 rakho
     return {'cart_item_count': 0}
