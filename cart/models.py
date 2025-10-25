@@ -1,13 +1,15 @@
-# cart/models.py
+# cart/models.py (FINAL & CORRECTED CODE)
 
 from django.db import models
-from django.contrib.auth.models import User
+# django.contrib.auth.models.User ko hatakar settings ko import karein
+from django.conf import settings 
 from store.models import Product
 from decimal import Decimal
 import datetime
 
 class Cart(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='cart')
+    # User ko settings.AUTH_USER_MODEL se refer karein
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cart')
     created_at = models.DateTimeField(auto_now_add=True)
     
     delivery_charge = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
@@ -15,7 +17,8 @@ class Cart(models.Model):
     discount_amount = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
 
     def __str__(self):
-        return f"Cart for {self.user.username}"
+        # Ab username ki jagah phone_number ka istemal karein
+        return f"Cart for {self.user.phone_number}" 
 
     def get_subtotal(self):
         return sum(item.get_subtotal() for item in self.items.all())
@@ -41,12 +44,13 @@ class CartItem(models.Model):
     quantity = models.PositiveIntegerField(default=1)
 
     def __str__(self):
-        return f"{self.quantity} x {self.product.name} in cart for {self.cart.user.username}"
+        # Ab username ki jagah phone_number ka istemal karein
+        return f"{self.quantity} x {self.product.name} in cart for {self.cart.user.phone_number}"
 
     def get_subtotal(self):
         return self.product.price * self.quantity
 
-# --- NAYE ORDER MODELS ---
+# --- ORDER MODELS ---
 
 class Order(models.Model):
     STATUS_CHOICES = (
@@ -62,7 +66,8 @@ class Order(models.Model):
         ('Online', 'Online'),
     )
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
+    # User ko settings.AUTH_USER_MODEL se refer karein
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='orders')
     order_id = models.CharField(max_length=120, unique=True, blank=True)
     shipping_address = models.TextField()
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
@@ -73,11 +78,11 @@ class Order(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Order {self.order_id} by {self.user.username}"
+        # Ab username ki jagah phone_number ka istemal karein
+        return f"Order {self.order_id} by {self.user.phone_number}"
 
-    def __str__(self):
-        return f"Order {self.order_id} by {self.user.username}"
-
+    # Ek extra __str__ method hata diya gaya hai.
+    
     def save(self, *args, **kwargs):
         # Pehle object ko save karein taaki hamein ek ID mil jaye
         super().save(*args, **kwargs)

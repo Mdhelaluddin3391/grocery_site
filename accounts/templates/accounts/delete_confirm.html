@@ -1,0 +1,30 @@
+{% extends 'store/base.html' %}
+{% load static %}
+
+{% block title %}Confirm Delete{% endblock title %}
+
+{% block extra_css %}
+<style>
+    .confirm-container { max-width: 500px; margin: 50px auto; padding: 30px; background-color: #fff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); text-align: center; border: 2px solid #e74c3c; }
+    .confirm-container h1 { font-size: 1.8rem; color: #e74c3c; margin-bottom: 15px; }
+    .confirm-container p { color: #555; margin-bottom: 30px; }
+    .btn-delete-confirm { width: 100%; padding: 12px; background-color: #e74c3c; color: #fff; border: none; border-radius: 6px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
+    .btn-delete-confirm:hover { background-color: #c0392b; }
+    .btn-cancel { display: block; width: 100%; padding: 10px; margin-top: 10px; background-color: #f0f0f0; color: #555; border: 1px solid #ccc; border-radius: 6px; text-decoration: none; font-weight: 500; }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="confirm-container">
+    <h1>Confirm Account Deletion</h1>
+    <p>
+        **WARNING:** Deleting your account will permanently remove all your data, including your **Cart, Orders, and Saved Addresses**. This action cannot be undone.
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn-delete-confirm">I Understand, Delete My Account</button>
+    </form>
+    <a href="{% url 'profile' %}" class="btn-cancel">Cancel and Go Back to Profile</a>
+</div>
+{% endblock content %}

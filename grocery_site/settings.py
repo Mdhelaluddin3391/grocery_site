@@ -134,7 +134,12 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 #my custome codes
-LOGIN_URL = '/accounts/login/'
+AUTH_USER_MODEL = 'accounts.User'
+
+AUTHENTICATION_BACKENDS = [
+    'accounts.backends.PhoneBackend',        # Customer (phone/OTP) login ke liye
+    'django.contrib.auth.backends.ModelBackend', # Admin (username/password) login ke liye
+]
 
 
 # --- EMAIL BACKEND SETTINGS (YEH CODE JODEIN) ---

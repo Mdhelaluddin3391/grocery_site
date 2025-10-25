@@ -31,7 +31,7 @@
 
                 {% if user.is_authenticated %}
                 {# This link now points to the profile page #}
-                <a href="{% url 'profile' %}" title="My Profile ({{ user.username }})">
+                <a href="{% url 'profile' %}" title="My Profile ({{user.username|default:user.phone_number }})">
                     <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Profile Icon">
                 </a>
                 {% else %}
