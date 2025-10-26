@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(error => {
                 console.error('Error adding to cart:', error);
-                window.location.href = '/accounts/login/';
+                alert('An error occurred. Please try again.');
             });
         }
     });
