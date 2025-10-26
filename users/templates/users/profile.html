@@ -1,0 +1,25 @@
+{% extends 'store/base.html' %}
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 20px;">
+    <h1>Welcome, {{ user.name|default:user.phone_number }}</h1>
+    
+    <div class="profile-section" style="margin-bottom: 20px;">
+        <h2>My Rewards</h2>
+        <p>You have <strong>{{ profile.loyalty_points }}</strong> loyalty points.</p>
+    </div>
+
+    <div class="profile-section">
+        <h2>My Orders</h2>
+        {# ... order loop ... #}
+    </div>
+
+    <div class="profile-section" style="margin-top: 30px;">
+        <h2>My Addresses</h2>
+        {# ... address loop ... #}
+    </div>
+
+    <a href="{% url 'logout' %}" style="display: inline-block; margin-top: 20px; color: #e74c3c;">Logout</a>
+</div>
+{% endblock %}
