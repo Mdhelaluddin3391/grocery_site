@@ -44,6 +44,7 @@
 
         </div>
         <form class="search-bar" method="GET" action="{% url 'search_results' %}">
+            {% csrf_token %}
             <input type="text" name="q" placeholder="Search for items..." value="{{ request.GET.q }}">
         </form>
 
