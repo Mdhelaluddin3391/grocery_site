@@ -7,7 +7,8 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
 from users.forms import CustomAuthenticationForm
-from django.contrib.auth.decorators import staff_member_required
+from django.contrib.admin.views.decorators import staff_member_required
+
 
 def staff_login_view(request):
     if request.user.is_authenticated and request.user.is_staff:

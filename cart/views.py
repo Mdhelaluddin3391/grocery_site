@@ -38,7 +38,8 @@ def add_to_cart(request, product_id):
             messages.error(request, f"Sorry, you cannot add more of '{product.name}'. Stock limit reached.")
             return redirect(request.META.get('HTTP_REFERER', 'home'))
     else:
-         cart_item.save() # Ensure save even on creation if needed later
+       #  cart_item.save() # Ensure save even on creation if needed later
+       pass
 
     if is_ajax:
         return JsonResponse({

@@ -155,3 +155,7 @@ STORE_COORDINATES = {
     "lat": 24.3725,  # Dharmanagar, Tripura ka lagbhag latitude
     "lng": 92.1661,  # Dharmanagar, Tripura ka lagbhag longitude
 }
+
+
+AUTH_USER_MODEL = 'users.CustomUser'
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
