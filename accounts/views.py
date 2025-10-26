@@ -1,4 +1,4 @@
-# accounts/views.py (FINAL CODE: Custom Customer Auth)
+# accounts/views.py (FINAL CODE: Custom Customer Auth with Order History)
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import logout as auth_logout # Django auth logout
@@ -6,6 +6,7 @@ from django.contrib import messages
 from .forms import PhoneNumberForm, OTPVerificationForm
 from .models import User, Customer, OTP, Address 
 from store.views import get_main_categories
+from cart.models import Order # Order model ko import karein
 import random
 import time 
 
@@ -139,9 +140,13 @@ def profile_view(request):
     except Exception:
         user_addresses = []
 
+    # Customer ke saare orders fetch karein, sabse naye order ko upar rakhein
+    customer_orders = Order.objects.filter(customer=customer).order_by('-created_at')
+
     context = {
         'customer': customer,
         'addresses': user_addresses,
+        'orders': customer_orders, # Orders ko context mein add karein
         'main_categories': get_main_categories(),
     }
     return render(request, 'accounts/profile.html', context)

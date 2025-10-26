@@ -5,9 +5,10 @@ from . import views
 
 
 urlpatterns = [
-    path('login/', views.phone_login, name='login'), # Phone number input
-    path('otp-verify/', views.otp_verify, name='otp_verify'), # OTP verification
-    path('profile/', views.profile_view, name='profile'), # User profile
-    path('logout/', views.user_logout, name='logout'), # Logout view
-    path('delete/', views.delete_account, name='delete_account'), # Account delete
+    path('login/', views.phone_login, name='login'),
+    path('otp-verify/', views.otp_verify, name='otp_verify'),
+    path('profile/', views.profile_view, name='profile'),
+    # Yahan 'user_logout' ko 'customer_logout' se badla gaya hai
+    path('logout/', views.customer_logout, name='logout'),
+    path('delete/', views.delete_account, name='delete_account'),
 ]
