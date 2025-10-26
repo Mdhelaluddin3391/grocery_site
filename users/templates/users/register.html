@@ -1,0 +1,12 @@
+{% extends 'store/base.html' %}
+{% block title %}Register{% endblock %}
+{% block content %}
+<div style="max-width: 400px; margin: 40px auto; padding: 20px; background: #fff; border-radius: 8px;">
+    <h2>Create Account</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" style="width: 100%; padding: 10px; background: #28a745; color: #fff; border: none; border-radius: 5px;">Register</button>
+    </form>
+</div>
+{% endblock %}

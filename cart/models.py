@@ -3,18 +3,17 @@
 from django.db import models
 from store.models import Product
 from decimal import Decimal
-
+from django.conf import settings # Ise import karein
 
 class Cart(models.Model):
     session_key = models.CharField(max_length=40, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    
     delivery_charge = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
     handling_fee = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
     discount_amount = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
 
     def __str__(self):
-        return f"Cart for session {self.session_key}" 
+        return f"Cart for session {self.session_key}"
 
     def get_subtotal(self):
         return sum(item.get_subtotal() for item in self.items.all())
@@ -40,48 +39,38 @@ class CartItem(models.Model):
     quantity = models.PositiveIntegerField(default=1)
 
     def __str__(self):
-        return f"{self.quantity} x {self.product.name} in cart for session {self.cart.session_key}"
+        return f"{self.quantity} x {self.product.name}"
 
     def get_subtotal(self):
         return self.product.price * self.quantity
 
-# --- ORDER MODELS ---
-
 class Order(models.Model):
-    STATUS_CHOICES = (
-        ('Pending', 'Pending'),
-        ('Processing', 'Processing'),
-        ('Shipped', 'Shipped'),
-        ('Delivered', 'Delivered'),
-        ('Cancelled', 'Cancelled'),
-    )
+    STATUS_CHOICES = (('Pending', 'Pending'), ('Processing', 'Processing'), ('Shipped', 'Shipped'), ('Delivered', 'Delivered'), ('Cancelled', 'Cancelled'))
+    PAYMENT_CHOICES = (('COD', 'Cash on Delivery'), ('Online', 'Online'))
 
-    PAYMENT_CHOICES = (
-        ('COD', 'Cash on Delivery'),
-        ('Online', 'Online'),
-    )
-
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    address = models.ForeignKey('users.Address', on_delete=models.SET_NULL, null=True, blank=True)
     order_id = models.CharField(max_length=120, unique=True, blank=True)
-    shipping_address = models.TextField()
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
     payment_method = models.CharField(max_length=20, choices=PAYMENT_CHOICES, default='COD')
     payment_status = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    # shipping_address field ki zaroorat nahi agar Address model hai
+    # shipping_address = models.TextField() 
 
     def __str__(self):
         return f"Order {self.order_id}"
 
     def save(self, *args, **kwargs):
+        is_new = self._state.adding
         super().save(*args, **kwargs)
-        
-        if not self.order_id:
+        if is_new and not self.order_id:
             timestamp = self.created_at.strftime('%Y%m%d')
             self.order_id = f"ORDER-{timestamp}-{self.id}"
-            kwargs['force_insert'] = False 
-            super().save(*args, **kwargs)
-
+            self.save(update_fields=['order_id'])
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
