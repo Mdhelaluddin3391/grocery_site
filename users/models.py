@@ -1,5 +1,3 @@
-# users/models.py
-
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
@@ -9,6 +7,8 @@ class CustomUserManager(BaseUserManager):
     def create_user(self, phone_number, password=None, **extra_fields):
         if not phone_number:
             raise ValueError('The Phone Number field must be set')
+        # Ensure default role: if not provided, assume customer
+        extra_fields.setdefault('is_customer', True)
         user = self.model(phone_number=phone_number, **extra_fields)
         user.set_password(password) # Password ko hash karega
         user.save(using=self._db)
@@ -17,6 +17,8 @@ class CustomUserManager(BaseUserManager):
     def create_superuser(self, phone_number, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
+        # Superusers are NOT customers
+        extra_fields.setdefault('is_customer', False)
 
         if extra_fields.get('is_staff') is not True:
             raise ValueError('Superuser must have is_staff=True.')
@@ -31,6 +33,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     name = models.CharField(max_length=100, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    # NEW: explicit customer flag
+    is_customer = models.BooleanField(default=True)
     date_joined = models.DateTimeField(auto_now_add=True)
 
     objects = CustomUserManager()
