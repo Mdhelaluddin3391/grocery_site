@@ -69,6 +69,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'store.context_processors.footer_categories',
+                'store.context_processors.main_categories_processor', # <-- YEH LINE ADD KAREIN
                 'cart.context_processors.cart_item_count',
             ],
         },

@@ -1,179 +1,75 @@
+{# cart/templates/cart/checkout.html #}
 {% extends 'store/base.html' %}
 {% load static %}
-
-{% block title %}Checkout{% endblock title %}
-
-{% block extra_css %}
-<style>
-    .checkout-container { max-width: 800px; margin: 20px auto; padding: 20px; }
-    .checkout-step { background-color: #fff; padding: 25px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.08); }
-    .checkout-step h3 { font-size: 1.2rem; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-    .address-card, .payment-option { padding: 15px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; cursor: pointer; display: flex; align-items: center; }
-    .address-card:hover, .payment-option:hover { border-color: #aaa; }
-    .address-card.selected, .payment-option.selected { border-color: #28a745; background-color: #f0fff4; }
-    .address-card input[type="radio"], .payment-option input[type="radio"] { margin-right: 15px; }
-    .address-card p, .payment-option label { margin: 0; }
-    .btn-submit { background-color: #28a745; color: #fff; border: none; padding: 15px 20px; border-radius: 5px; cursor: pointer; width: 100%; font-size: 1.1rem; font-weight: 600; margin-top: 10px; }
-    .btn-submit:hover { background-color: #218838; }
-    .form-group p { margin-bottom: 15px; }
-    .form-group input, .form-group select { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
-    .error-message { color: #d9534f; text-align: center; margin-top: 15px; font-weight: bold; }
-    #map { height: 300px; width: 100%; margin-bottom: 20px; border-radius: 8px; border: 1px solid #ccc; background-color: #f0f0f0; }
-    .location-btn-container { text-align: center; margin: 20px 0; }
-    .location-btn { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; }
-    .payment-option.disabled { cursor: not-allowed; background-color: #f8f9fa; }
-    .payment-option.disabled label { color: #6c757d; }
-</style>
-{% endblock extra_css %}
+{# ... (style block waise hi rahega) ... #}
 
 {% block content %}
 <div class="checkout-container">
-    <h1>Checkout</h1>
-    <form method="post" novalidate id="checkout-form">
-        {% csrf_token %}
-        <input type="hidden" name="latitude" id="id_latitude">
-        <input type="hidden" name="longitude" id="id_longitude">
+    {% if not user.is_authenticated %}
+        <div class="checkout-login-prompt" style="text-align: center; padding: 40px; background: #fff; border-radius: 8px;">
+            <h2>Please Log In</h2>
+            <p>You need to be logged in to proceed with checkout.</p>
+            <a href="{% url 'login' %}?next={{ request.path }}" class="btn-submit" style="text-decoration: none; display: inline-block; width: auto; padding: 12px 25px;">Login or Register</a>
+        </div>
+    {% else %}
+        <h1>Checkout</h1>
+        <form method="post" novalidate id="checkout-form">
+            {# ... (baaki form waise hi rahega) ... #}
+            {% csrf_token %}
+            <input type="hidden" name="latitude" id="id_latitude">
+            <input type="hidden" name="longitude" id="id_longitude">
 
-        <div class="checkout-step">
-            <h3>1. Shipping Address</h3>
-            {% if addresses %}
-                {% for address in addresses %}
-                <label for="address-{{ address.id }}" class="address-card">
-                    <input type="radio" name="address_choice" value="existing" id="address-{{ address.id }}" onclick="document.getElementById('selected_address_id').value='{{ address.id }}'">
-                    <div>
-                        <strong>{{ address.get_address_type_display }}</strong>
-                        <p>{{ address.address_line_1 }}, {% if address.address_line_2 %}{{ address.address_line_2 }},{% endif %} {{ address.city }}, {{ address.state }} - {{ address.pincode }}</p>
-                    </div>
+            <div class="checkout-step">
+                <h3>1. Shipping Address</h3>
+                {% if addresses %}
+                    {% for address in addresses %}
+                    <label for="address-{{ address.id }}" class="address-card">
+                        <input type="radio" name="address_choice" value="existing" id="address-{{ address.id }}" onclick="document.getElementById('selected_address_id').value='{{ address.id }}'">
+                        <div>
+                            <strong>{{ address.get_address_type_display }}</strong>
+                            <p>{{ address.address_line_1 }}, {% if address.address_line_2 %}{{ address.address_line_2 }},{% endif %} {{ address.city }}, {{ address.state }} - {{ address.pincode }}</p>
+                        </div>
+                    </label>
+                    {% endfor %}
+                    <input type="hidden" name="selected_address" id="selected_address_id">
+                {% endif %}
+
+                <label for="new-address-radio" class="address-card">
+                    <input type="radio" name="address_choice" value="new" id="new-address-radio" {% if not addresses %}checked{% endif %}>
+                    <strong>Add a New Address</strong>
                 </label>
-                {% endfor %}
-                <input type="hidden" name="selected_address" id="selected_address_id">
+
+                <div id="new-address-form" style="margin-top: 15px; {% if addresses %}display:none;{% endif %}">
+                    <p style="text-align: center; color: #555; margin: 15px 0;">
+    <strong>Quickly fill your address using your current location, or feel free to enter it manually below.</strong>                </p>
+                    <div class="location-btn-container">
+                        <button type="button" class="location-btn" onclick="getLocation()">📍 Use My Current Location</button>
+                    </div>
+                    <div id="map"></div>
+                    <div class="form-group">{{ address_form.as_p }}</div>
+                </div>
+            </div>
+
+            <div class="checkout-step">
+                <h3>2. Payment Method</h3>
+                <label for="cod" class="payment-option selected">
+                    <input type="radio" id="cod" name="payment_method" value="COD" checked>
+                    <label for="cod">Cash on Delivery (COD)</label>
+                </label>
+                <label for="upi" class="payment-option disabled">
+                    <input type="radio" id="upi" name="payment_method" value="UPI" disabled>
+                    <label for="upi">UPI / Online Payment (Currently Unavailable)</label>
+                </label>
+            </div>
+
+            {% if error %}
+                <p class="error-message">{{ error }}</p>
             {% endif %}
 
-            <label for="new-address-radio" class="address-card">
-                <input type="radio" name="address_choice" value="new" id="new-address-radio" {% if not addresses %}checked{% endif %}>
-                <strong>Add a New Address</strong>
-            </label>
-
-            <div id="new-address-form" style="margin-top: 15px; {% if addresses %}display:none;{% endif %}">
-                <p style="text-align: center; color: #555; margin: 15px 0;">
-<strong>Quickly fill your address using your current location, or feel free to enter it manually below.</strong>                </p>
-                <div class="location-btn-container">
-                    <button type="button" class="location-btn" onclick="getLocation()">📍 Use My Current Location</button>
-                </div>
-                <div id="map"></div>
-                <div class="form-group">{{ address_form.as_p }}</div>
-            </div>
-        </div>
-
-        <div class="checkout-step">
-            <h3>2. Payment Method</h3>
-            <label for="cod" class="payment-option selected">
-                <input type="radio" id="cod" name="payment_method" value="COD" checked>
-                <label for="cod">Cash on Delivery (COD)</label>
-            </label>
-            <label for="upi" class="payment-option disabled">
-                <input type="radio" id="upi" name="payment_method" value="UPI" disabled>
-                <label for="upi">UPI / Online Payment (Currently Unavailable)</label>
-            </label>
-        </div>
-
-        {% if error %}
-            <p class="error-message">{{ error }}</p>
-        {% endif %}
-
-        <button type="submit" class="btn-submit">Place Order</button>
-    </form>
+            <button type="submit" class="btn-submit">Place Order</button>
+        </form>
+    {% endif %}
 </div>
 {% endblock content %}
 
-{% block extra_js %}
-<script>
-    // Address selection logic
-    const addressRadios = document.querySelectorAll('input[name="address_choice"]');
-    const newAddressForm = document.getElementById('new-address-form');
-    addressRadios.forEach(radio => {
-        radio.addEventListener('change', function() {
-            if (this.value === 'new') {
-                newAddressForm.style.display = 'block';
-            } else {
-                newAddressForm.style.display = 'none';
-            }
-        });
-    });
-
-    // Payment and address option selection logic
-    document.querySelectorAll('.payment-option, .address-card').forEach(function(el) {
-        el.addEventListener('click', function() {
-            // Agar element disabled hai to kuch na karein
-            if (this.classList.contains('disabled')) {
-                return;
-            }
-            
-            // Remove 'selected' from siblings of the same type
-            const parent = this.parentElement;
-            parent.querySelectorAll('.' + this.className.split(' ')[0]).forEach(p => p.classList.remove('selected'));
-            
-            this.classList.add('selected');
-            const radioInput = this.querySelector('input[type="radio"]');
-            if(radioInput && !radioInput.disabled) {
-                radioInput.checked = true;
-            }
-
-            // Trigger change event for address logic
-            if(this.querySelector('input[name="address_choice"]')) {
-                 this.querySelector('input[name="address_choice"]').dispatchEvent(new Event('change'));
-            }
-        });
-    });
-</script>
-
-<script>
-    let map;
-    let marker;
-
-    function initMap(lat = 24.3725, lng = 92.1661) { // Default to Dharmanagar
-        const defaultLocation = { lat: lat, lng: lng };
-        map = new google.maps.Map(document.getElementById("map"), { center: defaultLocation, zoom: 15 });
-        marker = new google.maps.Marker({ position: defaultLocation, map: map, draggable: true });
-        google.maps.event.addListener(marker, 'dragend', function(event) {
-            updateCoordinates(event.latLng.lat(), event.latLng.lng());
-            geocodePosition(event.latLng);
-        });
-    }
-    function getLocation() { if (navigator.geolocation) { navigator.geolocation.getCurrentPosition(showPosition, showError); } else { alert("Geolocation is not supported by this browser."); } }
-    function showPosition(position) {
-        const userLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
-        map.setCenter(userLocation);
-        marker.setPosition(userLocation);
-        updateCoordinates(userLocation.lat, userLocation.lng);
-        geocodePosition(new google.maps.LatLng(userLocation.lat, userLocation.lng));
-    }
-    function updateCoordinates(lat, lng) {
-        document.getElementById('id_latitude').value = lat.toFixed(7);
-        document.getElementById('id_longitude').value = lng.toFixed(7);
-    }
-    function showError(error) { alert("Could not get your location. Please allow location access."); }
-    function geocodePosition(pos) {
-        const geocoder = new google.maps.Geocoder();
-        geocoder.geocode({ latLng: pos }, function(responses) {
-            if (responses && responses.length > 0) { fillAddressForm(responses[0]); } 
-            else { alert("Cannot determine address at this location."); }
-        });
-    }
-    function fillAddressForm(place) {
-        const components = {};
-        place.address_components.forEach(component => {
-            const types = component.types;
-            if (types.includes("premise") || types.includes("street_number")) components.address_line_1 = (components.address_line_1 || "") + component.long_name + " ";
-            if (types.includes("route")) components.address_line_1 = (components.address_line_1 || "") + component.long_name;
-            if (types.includes("sublocality_level_1")) document.getElementById("id_address_line_2").value = component.long_name;
-            if (types.includes("locality")) document.getElementById("id_city").value = component.long_name;
-            if (types.includes("administrative_area_level_1")) document.getElementById("id_state").value = component.long_name;
-            if (types.includes("postal_code")) document.getElementById("id_pincode").value = component.long_name;
-        });
-        document.getElementById("id_address_line_1").value = components.address_line_1 || "";
-    }
-</script>
-
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap"></script>
-{% endblock extra_js %}
+{# ... (extra_js block waise hi rahega) ... #}
