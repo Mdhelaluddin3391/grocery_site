@@ -1,3 +1,5 @@
+# grocery_site/settings.py
+
 """
 Django settings for grocery_site project.
 
@@ -40,9 +42,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'store',
     'cart',
-    'accounts',
-   
-
 ]
 
 MIDDLEWARE = [

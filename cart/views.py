@@ -1,33 +1,28 @@
-# cart/views.py (FINAL UPDATED CODE with Custom Customer Auth)
+# cart/views.py
 
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Cart, CartItem, Order, OrderItem
 from store.models import Product
 from django.db import transaction
-from accounts.models import Address, Customer
-from accounts.forms import AddressForm
 from django.contrib import messages
 from store.views import get_main_categories
-from accounts.views import customer_login_required # Custom decorator
 
 # --- HELPER FUNCTION ---
-def get_current_customer(request):
-    """Session ID se Customer object retrieve karein."""
-    customer_id = request.session.get('customer_id')
-    if not customer_id:
-        # customer_login_required decorator ise sambhalega
-        return None 
-    return get_object_or_404(Customer, id=customer_id)
+def get_cart(request):
+    """Session ID se Cart object retrieve karein."""
+    session_key = request.session.session_key
+    if not session_key:
+        request.session.save()
+        session_key = request.session.session_key
+    cart, created = Cart.objects.get_or_create(session_key=session_key)
+    return cart
 # -----------------------
 
 
-@customer_login_required
 def add_to_cart(request, product_id):
-    customer = get_current_customer(request)
+    cart = get_cart(request)
     product = get_object_or_404(Product, id=product_id)
-    # Cart ab Customer se link hogi
-    cart, created = Cart.objects.get_or_create(customer=customer)
     cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
 
     is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
@@ -53,22 +48,18 @@ def add_to_cart(request, product_id):
     return redirect(request.META.get('HTTP_REFERER', 'home'))
 
 
-@customer_login_required
 def view_cart(request):
-    customer = get_current_customer(request)
-    cart, created = Cart.objects.get_or_create(customer=customer)
+    cart = get_cart(request)
     context = {
         'cart': cart,
         'main_categories': get_main_categories(),
     }
     return render(request, 'cart/cart_detail.html', context)
 
-@customer_login_required
 def remove_from_cart(request, item_id):
-    # Customer cart item delete kar raha hai
-    cart_item = get_object_or_404(CartItem, id=item_id, cart__customer=get_current_customer(request))
+    cart = get_cart(request)
+    cart_item = get_object_or_404(CartItem, id=item_id, cart=cart)
     item_id_for_json = cart_item.id
-    cart = cart_item.cart
     cart_item.delete()
 
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -78,26 +69,25 @@ def remove_from_cart(request, item_id):
 
     return redirect('view_cart')
 
-@customer_login_required
 def increment_cart_item(request, item_id):
-    cart_item = get_object_or_404(CartItem, id=item_id, cart__customer=get_current_customer(request))
+    cart = get_cart(request)
+    cart_item = get_object_or_404(CartItem, id=item_id, cart=cart)
     if cart_item.product.stock > cart_item.quantity:
         cart_item.quantity += 1
         cart_item.save()
     else:
         return JsonResponse({'error': 'Stock limit reached'}, status=400)
     
-    cart_data = cart_item.cart.get_data_for_json()
+    cart_data = cart.get_data_for_json()
     cart_data.update({
         'item_quantity': cart_item.quantity,
         'item_subtotal': cart_item.get_subtotal(),
     })
     return JsonResponse(cart_data)
 
-@customer_login_required
 def decrement_cart_item(request, item_id):
-    cart_item = get_object_or_404(CartItem, id=item_id, cart__customer=get_current_customer(request))
-    cart = cart_item.cart
+    cart = get_cart(request)
+    cart_item = get_object_or_404(CartItem, id=item_id, cart=cart)
     item_removed = False
     if cart_item.quantity > 1:
         cart_item.quantity -= 1
@@ -115,109 +105,47 @@ def decrement_cart_item(request, item_id):
     })
     return JsonResponse(cart_data)
 
-@customer_login_required
 def checkout(request):
-    customer = get_current_customer(request)
-    cart = get_object_or_404(Cart, customer=customer)
+    cart = get_cart(request)
     if not cart.items.all().exists():
         return redirect('view_cart')
 
-    # Addresses ab customer se linked hain
-    addresses = Address.objects.filter(customer=customer).order_by('-is_default')
-    address_form = AddressForm()
-    
     if request.method == 'POST':
-        selected_address = None
-        address_choice = request.POST.get('address_choice')
+        # For simplicity, we are not handling address form here.
+        # You can add a simple form to get address if needed.
+        shipping_address = "Dummy Address for now"
+        payment_method = request.POST.get('payment_method', 'COD')
 
-        if address_choice == 'existing' and request.POST.get('selected_address'):
-            address_id = request.POST.get('selected_address')
-            selected_address = get_object_or_404(Address, id=address_id, customer=customer)
-        
-        elif address_choice == 'new':
-            form = AddressForm(request.POST)
-            if form.is_valid():
-                selected_address = form.save(commit=False)
-                selected_address.customer = customer # Customer set karein
+        with transaction.atomic():
+            order = Order.objects.create(
+                shipping_address=shipping_address,
+                total_amount=cart.get_grand_total(),
+                payment_method=payment_method,
+                payment_status=False
+            )
+
+            for item in cart.items.all():
+                product = item.product
+                if product.stock < item.quantity:
+                    messages.error(request, f"Sorry, '{product.name}' is now out of stock.")
+                    return redirect('view_cart')
                 
-                lat = request.POST.get('latitude')
-                lng = request.POST.get('longitude')
-                
-                selected_address.latitude = lat if lat else None
-                selected_address.longitude = lng if lng else None
-
-                selected_address.save()
-            else:
-                return render(request, 'cart/checkout.html', { 'cart': cart, 'addresses': addresses, 'address_form': form, 'error': 'Please correct the address errors.' })
-
-        if not selected_address:
-            return render(request, 'cart/checkout.html', { 'cart': cart, 'addresses': addresses, 'address_form': address_form, 'error': 'Please select or add a shipping address.' })
-
-        payment_method = request.POST.get('payment_method')
-        if payment_method == 'COD':
-            with transaction.atomic():
-                shipping_address_str = (
-                    f"{selected_address.address_line_1}, "
-                    f"{selected_address.address_line_2 + ', ' if selected_address.address_line_2 else ''}"
-                    f"{selected_address.city}, {selected_address.state} - {selected_address.pincode}"
+                OrderItem.objects.create(
+                    order=order, 
+                    product=product, 
+                    quantity=item.quantity, 
+                    price=product.price
                 )
-                
-                order = Order.objects.create(
-                    customer=customer, # Customer set karein
-                    shipping_address=shipping_address_str,
-                    total_amount=cart.get_grand_total(),
-                    payment_method='COD',
-                    payment_status=False
-                )
+                product.stock -= item.quantity
+                product.save()
 
-                for item in cart.items.all():
-                    product = item.product
-                    if product.stock < item.quantity:
-                        messages.error(request, f"Sorry, '{product.name}' is now out of stock.")
-                        return redirect('view_cart')
-                    
-                    OrderItem.objects.create(
-                        order=order, 
-                        product=product, 
-                        quantity=item.quantity, 
-                        price=product.price
-                    )
-                    product.stock -= item.quantity
-                    product.save()
-
-                cart.items.all().delete()
-            return redirect('order_successful', order_id=order.order_id)
+            cart.items.all().delete()
+        return redirect('order_successful', order_id=order.order_id)
         
-        elif payment_method == 'UPI':
-            # Ab yahan customer_id session mein hai
-            request.session['shipping_address_id'] = selected_address.id 
-            return redirect('process_payment')
+    return render(request, 'cart/checkout.html', { 'cart': cart })
 
-        else:
-            return render(request, 'cart/checkout.html', { 'cart': cart, 'addresses': addresses, 'address_form': address_form, 'error': 'Please select a valid payment method.' })
-
-    return render(request, 'cart/checkout.html', { 'cart': cart, 'addresses': addresses, 'address_form': address_form })
-
-@customer_login_required
-def process_payment(request):
-    address_id = request.session.get('shipping_address_id')
-    if not address_id:
-        return redirect('checkout')
-
-    # Address ab customer se linked hai
-    address = get_object_or_404(Address, id=address_id, customer=get_current_customer(request))
-    cart = get_object_or_404(Cart, customer=get_current_customer(request))
-    
-    context = {
-        'address': address,
-        'cart': cart
-    }
-    return render(request, 'cart/process_payment.html', context)
-
-@customer_login_required
 def order_successful(request, order_id):
-    # Order ab customer se linked hai
-    order = get_object_or_404(Order, order_id=order_id, customer=get_current_customer(request))
+    order = get_object_or_404(Order, order_id=order_id)
     context = {
         'order': order,
         'main_categories': get_main_categories(),

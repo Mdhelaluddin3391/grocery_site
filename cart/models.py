@@ -1,15 +1,12 @@
-# cart/models.py (FINAL & CORRECTED CODE - Linked to Customer Model)
+# cart/models.py
 
 from django.db import models
-from django.conf import settings 
 from store.models import Product
 from decimal import Decimal
-from accounts.models import Customer # Customer Model ko import karein
 
 
 class Cart(models.Model):
-    # Cart Customer model se linked hai
-    customer = models.OneToOneField(Customer, on_delete=models.CASCADE, related_name='cart')
+    session_key = models.CharField(max_length=40, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
     delivery_charge = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
@@ -17,7 +14,7 @@ class Cart(models.Model):
     discount_amount = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
 
     def __str__(self):
-        return f"Cart for {self.customer.phone_number}" 
+        return f"Cart for session {self.session_key}" 
 
     def get_subtotal(self):
         return sum(item.get_subtotal() for item in self.items.all())
@@ -43,7 +40,7 @@ class CartItem(models.Model):
     quantity = models.PositiveIntegerField(default=1)
 
     def __str__(self):
-        return f"{self.quantity} x {self.product.name} in cart for {self.cart.customer.phone_number}"
+        return f"{self.quantity} x {self.product.name} in cart for session {self.cart.session_key}"
 
     def get_subtotal(self):
         return self.product.price * self.quantity
@@ -64,8 +61,6 @@ class Order(models.Model):
         ('Online', 'Online'),
     )
 
-    # Order bhi Customer model se linked hai
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='orders')
     order_id = models.CharField(max_length=120, unique=True, blank=True)
     shipping_address = models.TextField()
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
@@ -76,7 +71,7 @@ class Order(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Order {self.order_id} by {self.customer.phone_number}"
+        return f"Order {self.order_id}"
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
