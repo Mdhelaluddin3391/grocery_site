@@ -10,4 +10,5 @@ urlpatterns = [
     path('cart/', include('cart.urls')),
     path('accounts/', include('users.urls')), # <-- Yeh user profile/logout ke liye hai
     path('dashboard/', include('dashboard.urls')),
+    path('accounts/', include('allauth.urls')),  # <-- Naya
 ]
