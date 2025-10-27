@@ -2,16 +2,40 @@
 <html>
 <head>
     <title>Staff Login</title>
+    <style>
+        .google-btn {
+            background-color: #4285F4; /* Google blue */
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 15px;
+            transition: background-color 0.2s;
+        }
+        .google-btn:hover {
+            background-color: #357ae8;
+        }
+    </style>
 </head>
 <body>
     <h2>Administration Login</h2>
-    {% if messages %}
+    {% load socialaccount %} {% if messages %}
         {% for message in messages %}<p style="color:red;">{{ message }}</p>{% endfor %}
     {% endif %}
+
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit">Login</button>
     </form>
+
+    <hr style="margin: 20px 0;">
+
+    <a href="{% provider_login_url 'google' %}?next={% url 'dashboard_home' %}" class="google-btn">
+        Login with Google
+    </a>
+
 </body>
 </html>
