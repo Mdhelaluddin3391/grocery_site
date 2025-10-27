@@ -1,0 +1,143 @@
+/* dashboard/static/dashboard/css/style.css (Professional Version) */
+
+/* --- Root Variables for Easy Theme Management --- */
+:root {
+    --primary-color: #00a94f;
+    --primary-color-dark: #008a3f;
+    --background-color: #eef1f5;
+    --card-background: #ffffff;
+    --text-color: #4a4a4a;
+    --text-light: #777;
+    --border-color: #e0e0e0;
+    --error-bg: #ffebee;
+    --error-text: #c62828;
+    --shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+}
+
+/* --- Global & Body Styles --- */
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, var(--background-color) 100%);
+    color: var(--text-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* --- Login Card & Container --- */
+.login-container {
+    padding: 20px;
+    perspective: 1000px; /* For 3D animation effect */
+}
+
+.login-card {
+    max-width: 420px;
+    width: 100%;
+    background-color: var(--card-background);
+    padding: 45px 35px;
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    text-align: center;
+    border: 1px solid var(--border-color);
+    transition: transform 0.5s ease, box-shadow 0.5s ease;
+    transform-style: preserve-3d;
+}
+
+/* Add a subtle animation on load/hover */
+.login-card:hover {
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.12);
+    transform: rotateY(5deg) rotateX(5deg);
+}
+
+/* --- Header Section --- */
+.login-header .logo {
+    font-weight: 700;
+    font-size: 2.2rem;
+    color: var(--primary-color);
+    margin: 0;
+    letter-spacing: -1px;
+}
+
+.login-header h2 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #333;
+    margin: 5px 0 10px 0;
+}
+
+.login-header p {
+    font-size: 1rem;
+    color: var(--text-light);
+    margin-bottom: 30px;
+    line-height: 1.6;
+}
+
+/* --- Error Messages --- */
+.messages {
+    margin-bottom: 25px;
+}
+.messages .error {
+    background-color: var(--error-bg);
+    color: var(--error-text);
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-left: 4px solid var(--error-text);
+    text-align: left;
+}
+
+/* --- Google Login Button --- */
+.google-login-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    background-color: var(--card-background);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    padding: 14px 22px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 500;
+    width: 100%;
+    box-sizing: border-box;
+    transition: all 0.25s ease-in-out;
+    transform: translateY(0);
+}
+
+.google-login-btn:hover {
+    background-color: #f9f9f9;
+    border-color: #ccc;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transform: translateY(-3px);
+}
+
+.google-login-btn:active {
+    transform: translateY(-1px);
+}
+
+.google-login-btn img {
+    width: 24px;
+    height: 24px;
+    transition: transform 0.3s ease;
+}
+
+.google-login-btn:hover img {
+    transform: rotate(360deg);
+}
+
+/* --- Footer --- */
+.login-footer {
+    margin-top: 35px;
+}
+
+.login-footer p {
+    font-size: 0.85rem;
+    color: #b0b0b0;
+}
