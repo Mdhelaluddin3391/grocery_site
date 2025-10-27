@@ -1,3 +1,5 @@
+# users/models.py (FULLY UPDATED)
+
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
@@ -7,17 +9,20 @@ class CustomUserManager(BaseUserManager):
     def create_user(self, phone_number, password=None, **extra_fields):
         if not phone_number:
             raise ValueError('The Phone Number field must be set')
-        # Ensure default role: if not provided, assume customer
+        
+        # Email ko normalize karein (agar diya gaya hai)
+        if 'email' in extra_fields:
+            extra_fields['email'] = self.normalize_email(extra_fields['email'])
+
         extra_fields.setdefault('is_customer', True)
         user = self.model(phone_number=phone_number, **extra_fields)
-        user.set_password(password) # Password ko hash karega
+        user.set_password(password)
         user.save(using=self._db)
         return user
 
     def create_superuser(self, phone_number, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        # Superusers are NOT customers
         extra_fields.setdefault('is_customer', False)
 
         if extra_fields.get('is_staff') is not True:
@@ -30,40 +35,41 @@ class CustomUserManager(BaseUserManager):
 # Hamara Custom User Model (Authentication ke liye)
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     phone_number = models.CharField(max_length=15, unique=True)
+    
+    # --- YEH NAYA FIELD ADD KIYA GAYA HAI ---
+    email = models.EmailField(unique=True, null=True, blank=True)
+    # ----------------------------------------
+    
     name = models.CharField(max_length=100, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-    # NEW: explicit customer flag
     is_customer = models.BooleanField(default=True)
     date_joined = models.DateTimeField(auto_now_add=True)
 
     objects = CustomUserManager()
 
     USERNAME_FIELD = 'phone_number'
-    REQUIRED_FIELDS = ['name'] # createsuperuser poochhega
+    REQUIRED_FIELDS = ['name']
 
     def __str__(self):
         return self.phone_number
 
-# 1. Customer ke liye Profile Model
+# ... (baaki models waise hi rahenge) ...
 class CustomerProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='customerprofile')
     loyalty_points = models.IntegerField(default=0)
-    # Aap yahan aur bhi fields add kar sakte hain, jaise date_of_birth
 
     def __str__(self):
         return f"Profile for customer: {self.user.name}"
 
-# 2. Staff ke liye Profile Model
 class StaffProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='staffprofile')
     employee_id = models.CharField(max_length=20, unique=True, blank=True, null=True)
-    role = models.CharField(max_length=50, blank=True, null=True) # e.g., 'Manager', 'Delivery Boy'
+    role = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):
         return f"Profile for staff: {self.user.name}"
 
-# Address Model (User se linked)
 class Address(models.Model):
     ADDRESS_TYPE_CHOICES = (
         ('Home', 'Home'),
@@ -77,8 +83,6 @@ class Address(models.Model):
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100)
     pincode = models.CharField(max_length=6)
-    
-    # Fields for location
     latitude = models.CharField(max_length=50, blank=True, null=True)
     longitude = models.CharField(max_length=50, blank=True, null=True)
 
