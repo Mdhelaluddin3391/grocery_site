@@ -1,18 +1,90 @@
 {% extends 'store/base.html' %}
-{% block title %}Login{% endblock %}
+{% block title %}Customer Login{% endblock %}
 {% block content %}
-<div style="max-width: 400px; margin: 40px auto; padding: 20px; background: #fff; border-radius: 8px;">
-    <h2>Login</h2>
-    {% if messages %}
-        {% for message in messages %}<p style="color:red;">{{ message }}</p>{% endfor %}
-    {% endif %}
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" style="width: 100%; padding: 10px; background: #28a745; color: #fff; border: none; border-radius: 5px;">Login</button>
-    </form>
-    <p style="text-align: center; margin-top: 15px;">
-        Don't have an account? <a href="{% url 'register' %}">Register here</a>
-    </p>
+
+<div style="max-width: 400px; margin: 50px auto; padding: 25px; background: #fff; border-radius: 10px;">
+    <h2 style="text-align:center;">Customer Login</h2>
+    <p style="text-align:center; color:#666;">Enter your phone number to continue</p>
+
+    <div id="step-phone">
+        <form id="phoneForm">
+            {% csrf_token %}
+            <input type="text" id="phoneInput" name="phone" placeholder="Enter phone number"
+                style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; margin-top:10px;"
+                required>
+            <button type="submit"
+                style="width:100%; margin-top:15px; padding:10px; background:#28a745; color:white; border:none; border-radius:5px;">
+                Send OTP
+            </button>
+        </form>
+    </div>
+
+    <div id="step-otp" style="display:none;">
+        <form id="otpForm">
+            {% csrf_token %}
+            <input type="hidden" id="otpPhone" name="phone">
+            <input type="text" id="otpInput" name="otp" placeholder="Enter OTP"
+                style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; margin-top:10px;" required>
+            <button type="submit"
+                style="width:100%; margin-top:15px; padding:10px; background:#007bff; color:white; border:none; border-radius:5px;">
+                Verify OTP
+            </button>
+        </form>
+    </div>
+
+    <p id="message" style="text-align:center; margin-top:15px; color:red;"></p>
 </div>
+
+<script>
+const phoneForm = document.getElementById('phoneForm');
+const otpForm = document.getElementById('otpForm');
+const msg = document.getElementById('message');
+const stepPhone = document.getElementById('step-phone');
+const stepOtp = document.getElementById('step-otp');
+const otpPhone = document.getElementById('otpPhone');
+
+phoneForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const phone = document.getElementById('phoneInput').value.trim();
+    msg.innerText = 'Sending OTP...';
+    const response = await fetch("{% url 'send_otp' %}", {
+        method: 'POST',
+        headers: {'X-CSRFToken': '{{ csrf_token }}'},
+        body: new URLSearchParams({phone})
+    });
+    const data = await response.json();
+    if (data.status === 'success') {
+        msg.style.color = 'green';
+        msg.innerText = data.message;
+        otpPhone.value = phone;
+        stepPhone.style.display = 'none';
+        stepOtp.style.display = 'block';
+    } else {
+        msg.style.color = 'red';
+        msg.innerText = data.message;
+    }
+});
+
+otpForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const phone = otpPhone.value;
+    const otp = document.getElementById('otpInput').value.trim();
+    msg.innerText = 'Verifying OTP...';
+    const response = await fetch("{% url 'verify_otp' %}", {
+        method: 'POST',
+        headers: {'X-CSRFToken': '{{ csrf_token }}'},
+        body: new URLSearchParams({phone, otp})
+    });
+    const data = await response.json();
+    if (data.status === 'success') {
+        msg.style.color = 'green';
+        msg.innerText = data.message;
+        setTimeout(() => window.location.href = "{% url 'home' %}", 1200);
+    } else {
+        msg.style.color = 'red';
+        msg.innerText = data.message;
+    }
+});
+</script>
+
 {% endblock %}

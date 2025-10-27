@@ -1,0 +1,10 @@
+{% extends 'store/base.html' %}
+{% block content %}
+<h2>Phone Login / Sign-Up</h2>
+<form method="post" action="{% url 'send_otp' %}">
+  {% csrf_token %}
+  <label>Phone number:</label>
+  <input name="phone" placeholder="+91XXXXXXXXXX" required />
+  <button type="submit">Send OTP</button>
+</form>
+{% endblock %}

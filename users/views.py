@@ -1,54 +1,113 @@
+# users/views.py
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate, logout
-from django.contrib import messages
-from .forms import CustomUserCreationForm, CustomAuthenticationForm
-from cart.models import Order
+from django.contrib import messages, auth
+from django.contrib.auth import get_user_model, login, logout
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from .models import CustomerProfile
+from django.views import View
+import random
 
-def register_view(request):
+from .models import PhoneOTP, CustomerProfile, StaffProfile
+
+User = get_user_model()
+
+
+def otp_login_page(request):
+    """Show phone number input page."""
+    return render(request, 'users/login.html')
+
+    
+# -------------------- SEND OTP --------------------
+@csrf_exempt
+def send_otp(request):
     if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
-            # create user as customer explicitly
-            user = form.save(commit=False)
-            user.is_customer = True  # ensure this user is a customer
-            user.is_staff = False
-            user.save()
-            # signal will create CustomerProfile because is_customer=True
-            login(request, user)
-            return redirect('home')
-    else:
-        form = CustomUserCreationForm()
-    return render(request, 'users/register.html', {'form': form})
+        phone = request.POST.get('phone')
 
-def login_view(request):
+        if not phone:
+            return JsonResponse({'status': 'error', 'message': 'Phone number is required'})
+
+        otp_code = PhoneOTP.generate_otp()
+        PhoneOTP.objects.update_or_create(phone=phone, defaults={'otp': otp_code, 'created_at': timezone.now(), 'tries': 0})
+
+        # Simulate sending OTP (in real setup use Twilio or other SMS gateway)
+        print(f"OTP for {phone} is {otp_code}")
+
+        return JsonResponse({'status': 'success', 'message': f'OTP sent to {phone}'})
+
+
+# -------------------- VERIFY OTP --------------------
+@csrf_exempt
+def verify_otp(request):
     if request.method == 'POST':
-        form = CustomAuthenticationForm(request, data=request.POST)
-        if form.is_valid():
-            phone_number = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(request, username=phone_number, password=password)
-            # Use is_customer check for webapp customer login
-            if user is not None and getattr(user, 'is_customer', False):
-                login(request, user)
-                return redirect('home')
-            else:
-                messages.error(request, "Invalid customer credentials.")
-    form = CustomAuthenticationForm()
-    return render(request, 'users/login.html', {'form': form})
+        phone = request.POST.get('phone')
+        otp_input = request.POST.get('otp')
 
-def logout_view(request):
+        try:
+            otp_record = PhoneOTP.objects.get(phone=phone)
+        except PhoneOTP.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'No OTP found for this phone number'})
+
+        if otp_record.is_expired():
+            otp_record.delete()
+            return JsonResponse({'status': 'error', 'message': 'OTP expired, please request again'})
+
+        if otp_input != otp_record.otp:
+            otp_record.tries += 1
+            otp_record.save()
+            return JsonResponse({'status': 'error', 'message': 'Invalid OTP'})
+
+        # OTP verified successfully
+        otp_record.delete()
+
+        # Create or get user
+        user, created = User.objects.get_or_create(phone_number=phone, defaults={'is_customer': True})
+        if created:
+            CustomerProfile.objects.create(user=user)
+
+        login(request, user)
+        return JsonResponse({'status': 'success', 'message': 'Login successful'})
+
+
+# -------------------- LOGOUT --------------------
+def logout_user(request):
     logout(request)
-    return redirect('home')
+    messages.success(request, "You have been logged out successfully.")
+    return redirect('/')
+
+
+# -------------------- CUSTOMER PROFILE --------------------
+@login_required(login_url='/login/')
+def profile_view(request):
+    if request.user.is_customer:
+        profile = getattr(request.user, 'customerprofile', None)
+        return render(request, 'users/customer_profile.html', {'profile': profile})
+    else:
+        profile = getattr(request.user, 'staffprofile', None)
+        return render(request, 'users/staff_profile.html', {'profile': profile})
+
+
+# -------------------- STAFF GOOGLE LOGIN HANDLER --------------------
+from allauth.socialaccount.models import SocialAccount
 
 @login_required
-def profile_view(request):
-    # Only customers can view the customer profile page
-    if not getattr(request.user, 'is_customer', False):
-        return redirect('home')
-    profile, created = CustomerProfile.objects.get_or_create(user=request.user)
-    orders = Order.objects.filter(user=request.user).order_by('-created_at')
-    addresses = request.user.addresses.all()
-    context = {'profile': profile, 'orders': orders, 'addresses': addresses}
-    return render(request, 'users/profile.html', context)
+def google_login_success(request):
+    """
+    This view runs only for Google Sign-In users (staff/admin).
+    """
+    if not request.user.is_staff:
+        logout(request)
+        messages.error(request, "Access denied. You are not a staff member.")
+        return redirect('/')
+
+    social_account = SocialAccount.objects.filter(user=request.user).first()
+    if social_account:
+        StaffProfile.objects.get_or_create(user=request.user)
+        messages.success(request, f"Welcome back, {request.user.username} (Google Login)!")
+        return redirect('/admin-dashboard/')
+    else:
+        logout(request)
+        messages.error(request, "Google authentication failed.")
+        return redirect('/')
