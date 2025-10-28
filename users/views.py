@@ -67,7 +67,7 @@ def verify_otp(request):
         if created:
             CustomerProfile.objects.create(user=user)
 
-        login(request, user)
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend') # <-- YEH HAI SAHI CODE
         return JsonResponse({'status': 'success', 'message': 'Login successful'})
 
 

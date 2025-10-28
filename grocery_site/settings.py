@@ -134,9 +134,9 @@ LOGIN_REDIRECT_URL = '/dashboard/'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/dashboard/login/'
 
 # Simplified settings for staff (Google only)
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
+# Simplified settings for staff (Google only)
+ACCOUNT_LOGIN_METHODS = ['email']
+ACCOUNT_SIGNUP_FIELDS = ['email']
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 ACCOUNT_LOGOUT_ON_GET = True
 
