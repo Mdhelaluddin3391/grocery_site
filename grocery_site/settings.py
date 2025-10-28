@@ -145,6 +145,7 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = None # We are not using usernames
 ACCOUNT_USERNAME_REQUIRED = False      # Explicitly disable usernames
 ACCOUNT_EMAIL_REQUIRED = True          # Email is mandatory
 ACCOUNT_EMAIL_VERIFICATION = 'none'    # Do not ask for email verification
+ACCOUNT_USER_MODEL_EMAIL_FIELD = None  #<-- ADD THIS LINE
 
 # --- URLs to redirect to after login/logout ---
 LOGIN_REDIRECT_URL = '/dashboard/'
