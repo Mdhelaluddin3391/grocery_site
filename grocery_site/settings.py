@@ -140,7 +140,7 @@ SOCIALACCOUNT_LOGIN_ON_GET = True
 
 # 3. New-style settings that replace the deprecated and conflicting ones
 ACCOUNT_LOGIN_METHODS = ['email']      # Users are identified by their email
-ACCOUNT_SIGNUP_FIELDS = ['email']      # Sign-up only requires an email (no password form)
+# ACCOUNT_SIGNUP_FIELDS = ['email']      # Sign-up only requires an email (no password form)
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None # We are not using usernames
 ACCOUNT_USERNAME_REQUIRED = False      # Explicitly disable usernames
 ACCOUNT_EMAIL_REQUIRED = True          # Email is mandatory

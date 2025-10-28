@@ -1,90 +1,87 @@
 {% extends 'store/base.html' %}
+{% load static %}
 {% block title %}Customer Login{% endblock %}
-{% block content %}
 
-<div style="max-width: 400px; margin: 50px auto; padding: 25px; background: #fff; border-radius: 10px;">
-    <h2 style="text-align:center;">Customer Login</h2>
-    <p style="text-align:center; color:#666;">Enter your phone number to continue</p>
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'users/css/style.css' %}">
+{% endblock extra_css %}
+
+{% block content %}
+<div class="auth-container">
+    <h2>Customer Login</h2>
+    <p class="subtitle">Enter your phone number to continue</p>
 
     <div id="step-phone">
-        <form id="phoneForm">
+        <form id="phoneForm" class="auth-form">
             {% csrf_token %}
-            <input type="text" id="phoneInput" name="phone" placeholder="Enter phone number"
-                style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; margin-top:10px;"
-                required>
-            <button type="submit"
-                style="width:100%; margin-top:15px; padding:10px; background:#28a745; color:white; border:none; border-radius:5px;">
-                Send OTP
-            </button>
+            <input type="tel" id="phoneInput" name="phone" placeholder="Enter 10-digit phone number" required>
+            <button type="submit" class="btn btn-primary">Send OTP</button>
         </form>
     </div>
 
     <div id="step-otp" style="display:none;">
-        <form id="otpForm">
+        <form id="otpForm" class="auth-form">
             {% csrf_token %}
             <input type="hidden" id="otpPhone" name="phone">
-            <input type="text" id="otpInput" name="otp" placeholder="Enter OTP"
-                style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; margin-top:10px;" required>
-            <button type="submit"
-                style="width:100%; margin-top:15px; padding:10px; background:#007bff; color:white; border:none; border-radius:5px;">
-                Verify OTP
-            </button>
+            <input type="text" id="otpInput" name="otp" placeholder="Enter 6-digit OTP" required>
+            <button type="submit" class="btn btn-secondary">Verify & Login</button>
         </form>
     </div>
 
-    <p id="message" style="text-align:center; margin-top:15px; color:red;"></p>
+    <p id="message"></p>
 </div>
 
 <script>
-const phoneForm = document.getElementById('phoneForm');
-const otpForm = document.getElementById('otpForm');
-const msg = document.getElementById('message');
-const stepPhone = document.getElementById('step-phone');
-const stepOtp = document.getElementById('step-otp');
-const otpPhone = document.getElementById('otpPhone');
+    const phoneForm = document.getElementById('phoneForm');
+    const otpForm = document.getElementById('otpForm');
+    const msg = document.getElementById('message');
+    const stepPhone = document.getElementById('step-phone');
+    const stepOtp = document.getElementById('step-otp');
+    const otpPhone = document.getElementById('otpPhone');
 
-phoneForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const phone = document.getElementById('phoneInput').value.trim();
-    msg.innerText = 'Sending OTP...';
-    const response = await fetch("{% url 'send_otp' %}", {
-        method: 'POST',
-        headers: {'X-CSRFToken': '{{ csrf_token }}'},
-        body: new URLSearchParams({phone})
+    phoneForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const phone = document.getElementById('phoneInput').value.trim();
+        msg.innerText = 'Sending OTP...';
+        msg.style.color = 'var(--text-light)';
+        const response = await fetch("{% url 'send_otp' %}", {
+            method: 'POST',
+            headers: {'X-CSRFToken': '{{ csrf_token }}'},
+            body: new URLSearchParams({phone})
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+            msg.style.color = 'var(--success-color)';
+            msg.innerText = data.message;
+            otpPhone.value = phone;
+            stepPhone.style.display = 'none';
+            stepOtp.style.display = 'block';
+        } else {
+            msg.style.color = 'var(--error-color)';
+            msg.innerText = data.message;
+        }
     });
-    const data = await response.json();
-    if (data.status === 'success') {
-        msg.style.color = 'green';
-        msg.innerText = data.message;
-        otpPhone.value = phone;
-        stepPhone.style.display = 'none';
-        stepOtp.style.display = 'block';
-    } else {
-        msg.style.color = 'red';
-        msg.innerText = data.message;
-    }
-});
 
-otpForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const phone = otpPhone.value;
-    const otp = document.getElementById('otpInput').value.trim();
-    msg.innerText = 'Verifying OTP...';
-    const response = await fetch("{% url 'verify_otp' %}", {
-        method: 'POST',
-        headers: {'X-CSRFToken': '{{ csrf_token }}'},
-        body: new URLSearchParams({phone, otp})
+    otpForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const phone = otpPhone.value;
+        const otp = document.getElementById('otpInput').value.trim();
+        msg.innerText = 'Verifying OTP...';
+        msg.style.color = 'var(--text-light)';
+        const response = await fetch("{% url 'verify_otp' %}", {
+            method: 'POST',
+            headers: {'X-CSRFToken': '{{ csrf_token }}'},
+            body: new URLSearchParams({phone, otp})
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+            msg.style.color = 'var(--success-color)';
+            msg.innerText = data.message;
+            setTimeout(() => window.location.href = "{% url 'home' %}", 1000);
+        } else {
+            msg.style.color = 'var(--error-color)';
+            msg.innerText = data.message;
+        }
     });
-    const data = await response.json();
-    if (data.status === 'success') {
-        msg.style.color = 'green';
-        msg.innerText = data.message;
-        setTimeout(() => window.location.href = "{% url 'home' %}", 1200);
-    } else {
-        msg.style.color = 'red';
-        msg.innerText = data.message;
-    }
-});
 </script>
-
 {% endblock %}

@@ -1,10 +1,19 @@
 {% extends 'store/base.html' %}
+{% load static %}
+{% block title %}Login with Phone{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'users/css/style.css' %}">
+{% endblock extra_css %}
+
 {% block content %}
-<h2>Phone Login / Sign-Up</h2>
-<form method="post" action="{% url 'send_otp' %}">
-  {% csrf_token %}
-  <label>Phone number:</label>
-  <input name="phone" placeholder="+91XXXXXXXXXX" required />
-  <button type="submit">Send OTP</button>
-</form>
+<div class="auth-container">
+  <h2>Phone Login / Sign-Up</h2>
+  <p class="subtitle">We'll send a verification code to your phone.</p>
+  <form method="post" action="{% url 'send_otp' %}" class="auth-form">
+    {% csrf_token %}
+    <input name="phone" type="tel" placeholder="+91XXXXXXXXXX" required />
+    <button type="submit" class="btn btn-primary">Send OTP</button>
+  </form>
+</div>
 {% endblock %}

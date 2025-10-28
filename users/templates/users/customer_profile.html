@@ -1,25 +1,32 @@
 {% extends 'store/base.html' %}
+{% load static %}
 {% block title %}My Profile{% endblock %}
 
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'users/css/style.css' %}">
+{% endblock extra_css %}
+
 {% block content %}
-<div class="container" style="padding: 20px;">
+<div class="profile-container">
     <h1>Welcome, {{ user.name|default:user.phone_number }}</h1>
     
-    <div class="profile-section" style="margin-bottom: 20px;">
+    <div class="profile-section">
         <h2>My Rewards</h2>
-        <p>You have <strong>{{ profile.loyalty_points }}</strong> loyalty points.</p>
-    </div>
+        <p>You currently have <strong>{{ profile.loyalty_points }}</strong> loyalty points.</p>
+        </div>
 
     <div class="profile-section">
         <h2>My Orders</h2>
-        {# ... order loop ... #}
+        <p>Your recent orders will be displayed here.</p>
+        {# You can loop through user's orders here when you implement that logic #}
     </div>
 
-    <div class="profile-section" style="margin-top: 30px;">
+    <div class="profile-section">
         <h2>My Addresses</h2>
-        {# ... address loop ... #}
+        <p>Your saved addresses will be shown here.</p>
+         {# You can loop through user's addresses here #}
     </div>
 
-    <a href="{% url 'logout' %}" style="display: inline-block; margin-top: 20px; color: #e74c3c;">Logout</a>
+    <a href="{% url 'logout_user' %}" class="logout-link">Logout</a>
 </div>
 {% endblock %}
