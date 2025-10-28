@@ -27,7 +27,6 @@ def staff_login_view(request):
 
 
 # --- DASHBOARD HOME ---
-@login_required
 @user_passes_test(staff_check, login_url='/accounts/google/login/')
 def dashboard_home_view(request):
     """
