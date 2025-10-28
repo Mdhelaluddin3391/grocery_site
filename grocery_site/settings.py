@@ -147,6 +147,9 @@ ACCOUNT_EMAIL_REQUIRED = True          # Email is mandatory
 ACCOUNT_EMAIL_VERIFICATION = 'none'    # Do not ask for email verification
 ACCOUNT_USER_MODEL_EMAIL_FIELD = None  #<-- ADD THIS LINE
 
+# ACCOUNT_LOGIN_METHODS = {'email'}
+# ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+
 # --- URLs to redirect to after login/logout ---
 LOGIN_REDIRECT_URL = '/dashboard/'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/dashboard/login/'
