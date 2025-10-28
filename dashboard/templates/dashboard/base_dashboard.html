@@ -1,0 +1,60 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}QuickDash Dashboard{% endblock title %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'dashboard/css/dashboard.css' %}?v=1.0">
+</head>
+<body>
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1 class="sidebar-logo">QuickDash</h1>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item active">
+                        <a href="{% url 'dashboard_home' %}">
+                            <span>🏠</span> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#">
+                            <span>📦</span> Orders
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#">
+                            <span>🛍️</span> Products
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#">
+                            <span>👥</span> Customers
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="{% url 'staff_logout' %}" class="logout-btn">Logout</a>
+            </div>
+        </aside>
+        <main class="main-content">
+            <header class="main-header">
+                <h2>{% block page_title %}Dashboard Overview{% endblock page_title %}</h2>
+                <div class="user-info">
+                    Welcome, {{ request.user.name|default:request.user.email }}
+                </div>
+            </header>
+            <div class="content-wrapper">
+                {% block content %}{% endblock content %}
+            </div>
+        </main>
+    </div>
+</body>
+</html>

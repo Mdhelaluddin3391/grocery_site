@@ -1,0 +1,56 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block title %}Dashboard Home{% endblock title %}
+
+{% block page_title %}Dashboard Overview{% endblock page_title %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <h4>Today's Orders</h4>
+        <p>{{ todays_orders }}</p>
+    </div>
+    <div class="stat-card">
+        <h4>Pending Orders</h4>
+        <p>{{ pending_orders }}</p>
+    </div>
+    <div class="stat-card">
+        <h4>Total Revenue</h4>
+        <p>₹{{ total_revenue|floatformat:2 }}</p>
+    </div>
+    <div class="stat-card">
+        <h4>Total Customers</h4>
+        <p>{{ total_customers }}</p>
+    </div>
+</div>
+
+<div class="table-container">
+    <h3>Recent Orders</h3>
+    <table class="orders-table">
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in recent_orders %}
+            <tr>
+                <td>{{ order.order_id }}</td>
+                <td>{{ order.user.name|default:order.user.phone_number }}</td>
+                <td>₹{{ order.total_amount|floatformat:2 }}</td>
+                <td><span class="status-badge status-{{ order.status|lower }}">{{ order.status }}</span></td>
+                <td>{{ order.created_at|date:"d M, Y" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">No recent orders found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock content %}

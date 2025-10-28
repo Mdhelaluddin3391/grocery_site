@@ -40,7 +40,8 @@ class CustomUserManager(BaseUserManager):
 
 # -------------------- CUSTOM USER MODEL --------------------
 class CustomUser(AbstractBaseUser, PermissionsMixin):
-    phone_number = models.CharField(max_length=15, unique=True)
+    # phone_number = models.CharField(max_length=15, unique=True)
+    phone_number = models.CharField(max_length=15, unique=True, null=True, blank=True) # <-- NAYA CODE
     email = models.EmailField(unique=True, null=True, blank=True)
     name = models.CharField(max_length=100, blank=True)
     is_active = models.BooleanField(default=True)
@@ -54,7 +55,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['name']
 
     def __str__(self):
-        return self.phone_number
+        return self.phone_number or self.email or f"User {self.id}"
 
 
 # -------------------- CUSTOMER PROFILE --------------------

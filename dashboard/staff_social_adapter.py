@@ -40,6 +40,19 @@ class StaffSocialAccountAdapter(DefaultSocialAccountAdapter):
 
     def save_user(self, request, sociallogin, form=None):
         """Save the user after authorization."""
+        # Pehle social login se user object ko lein
+        user = sociallogin.user
+
+        # YEH NAYI LOGIC ADD KARNI HAI
+        if not user.pk:  # Agar user naya hai (database mein save nahi hua hai)
+            email = sociallogin.account.extra_data.get('email')
+            email_domain = email.split('@')[-1].lower()
+            
+            # For new Google sign-ins, set the phone number to None
+            if email_domain in AUTHORIZED_STAFF_DOMAINS:
+                user.phone_number = None  # <-- YEH HAI ZAROORI BADLAAV
+        
+        # Ab user ko save karein
         user = super().save_user(request, sociallogin, form=form)
         user.save()
         return user

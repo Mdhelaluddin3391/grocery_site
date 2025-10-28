@@ -1,4 +1,4 @@
-{% extends 'dashboard/base.html' %}
+{% extends 'dashboard/login_base.html' %}
 {% load static %}
 {% load socialaccount %}
 
@@ -12,7 +12,7 @@
             <h2>Staff Panel</h2>
             <p>Please sign in with your authorized Google account to continue.</p>
         </div>
-        
+
         {% if messages %}
             <div class="messages">
                 {% for message in messages %}
