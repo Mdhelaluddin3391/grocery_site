@@ -123,33 +123,34 @@ STORE_COORDINATES = {"lat": 24.3725, "lng": 92.1661}
 # Django Allauth (Google Login) configuration
 # -------------------------------------------------------------------
 SITE_ID = 1
-SOCIALACCOUNT_LOGIN_ON_GET=True
 
+# This tells Django which authentication methods to use
 AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',  # for admin login
-    'allauth.account.auth_backends.AuthenticationBackend',  # for Google login
+    'django.contrib.auth.backends.ModelBackend',        # Needed for Django admin login
+    'allauth.account.auth_backends.AuthenticationBackend', # Needed for Google login
 ]
 
-# Where users go after login/logout
+# --- CORE ALLAUTH SETTINGS FOR MODERN VERSIONS ---
+
+# 1. Connects your custom security logic
+SOCIALACCOUNT_ADAPTER = 'dashboard.staff_social_adapter.StaffSocialAccountAdapter'
+
+# 2. Skips the intermediate "Continue" confirmation page
+SOCIALACCOUNT_LOGIN_ON_GET = True
+
+# 3. New-style settings that replace the deprecated and conflicting ones
+ACCOUNT_LOGIN_METHODS = ['email']      # Users are identified by their email
+ACCOUNT_SIGNUP_FIELDS = ['email']      # Sign-up only requires an email (no password form)
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None # We are not using usernames
+ACCOUNT_USERNAME_REQUIRED = False      # Explicitly disable usernames
+ACCOUNT_EMAIL_REQUIRED = True          # Email is mandatory
+ACCOUNT_EMAIL_VERIFICATION = 'none'    # Do not ask for email verification
+
+# --- URLs to redirect to after login/logout ---
 LOGIN_REDIRECT_URL = '/dashboard/'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/dashboard/login/'
 
-# Simplified settings for staff (Google only)
-
-# ✅ New-style settings (django-allauth >= 0.63)
-ACCOUNT_LOGIN_METHODS = {'email'}
-ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
-
-# Disable username system entirely
-ACCOUNT_USER_MODEL_USERNAME_FIELD = None
-
-# Skip email verification (optional)
-ACCOUNT_EMAIL_VERIFICATION = 'none'
-
-# Connect custom staff adapter
-SOCIALACCOUNT_ADAPTER = 'dashboard.staff_social_adapter.StaffSocialAccountAdapter'
-
-# Google provider configuration
+# --- Google Provider Specific Settings ---
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'SCOPE': ['profile', 'email'],
