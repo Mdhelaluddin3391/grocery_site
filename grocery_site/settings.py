@@ -134,11 +134,16 @@ LOGIN_REDIRECT_URL = '/dashboard/'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/dashboard/login/'
 
 # Simplified settings for staff (Google only)
-# Simplified settings for staff (Google only)
-ACCOUNT_LOGIN_METHODS = ['email']
-ACCOUNT_SIGNUP_FIELDS = ['email']
+
+# ✅ New-style settings (django-allauth >= 0.63)
+ACCOUNT_LOGIN_METHODS = {'email'}
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+
+# Disable username system entirely
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+
+# Skip email verification (optional)
 ACCOUNT_EMAIL_VERIFICATION = 'none'
-ACCOUNT_LOGOUT_ON_GET = True
 
 # Connect custom staff adapter
 SOCIALACCOUNT_ADAPTER = 'dashboard.staff_social_adapter.StaffSocialAccountAdapter'
