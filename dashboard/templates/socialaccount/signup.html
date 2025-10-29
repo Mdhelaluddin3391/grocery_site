@@ -1,0 +1,31 @@
+{# dashboard/templates/socialaccount/signup.html #}
+{% extends 'dashboard/login_base.html' %}
+{% load static %}
+
+{% block title %}Staff Sign Up{% endblock title %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-card" style="max-width: 450px;">
+        <div class="login-header">
+            <h1 class="logo">QuickDash</h1>
+            <h2>Complete Staff Registration</h2>
+            <p>Welcome! Your email <strong>{{ user.email }}</strong> is ready. Just set a password to continue.</p>
+        </div>
+
+        <form class="signup" id="signup_form" method="post" action="{% url 'socialaccount_signup' %}">
+            {% csrf_token %}
+            
+            {{ form.as_p }}
+            
+            {% if redirect_field_value %}
+                <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+            {% endif %}
+            
+            <button type="submit" class="google-login-btn" style="background-color: var(--primary-color); color: white; margin-top: 20px;">
+                Complete Sign Up
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock content %}

@@ -100,7 +100,7 @@ STORE_LOCATION_NAME = "Dharmanagar"
 STORE_COORDINATES = {"lat": 24.3725, "lng": 92.1661}
 
 # Django Allauth (Google Login) configuration
-SITE_ID = 2
+SITE_ID = 1
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
@@ -108,15 +108,20 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 SOCIALACCOUNT_ADAPTER = 'dashboard.staff_social_adapter.StaffSocialAccountAdapter'
-SOCIALACCOUNT_LOGIN_ON_GET = True
 
-# New-style allauth settings
+
+SOCIALACCOUNT_LOGIN_ON_GET = True
+SOCIALACCOUNT_AUTO_SIGNUP = False # <--- YEH LINE ADD KAREIN
+
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_EMAIL_VERIFICATION = 'none'
-ACCOUNT_USER_MODEL_USERNAME_FIELD = None  # <--- YEH LINE ADD KAREIN
-SOCIALACCOUNT_AUTO_SIGNUP = True  # <--- YEH LINE ADD KAREIN
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+
+SOCIALACCOUNT_FORMS = {
+    'signup': 'dashboard.forms.StaffSocialSignupForm',
+}
 
 LOGIN_REDIRECT_URL = '/dashboard/'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/dashboard/login/'
