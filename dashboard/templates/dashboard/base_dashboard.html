@@ -5,56 +5,290 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}QuickDash Dashboard{% endblock title %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'dashboard/css/dashboard.css' %}?v=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .sidebar-scroll::-webkit-scrollbar { width: 6px; }
+        .sidebar-scroll::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 3px; }
+        .sidebar-scroll::-webkit-scrollbar-track { background: #1a202c; }
+        .main-scroll::-webkit-scrollbar { width: 6px; }
+        .main-scroll::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 3px; }
+        .main-scroll::-webkit-scrollbar-track { background: #f7fafc; }
+        .popover {
+            display: none;
+            position: fixed;
+            z-index: 50;
+            width: 380px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border-radius: 0.5rem;
+            background-color: white;
+            border: 1px solid #e2e8f0;
+        }
+        .popover.show { display: block; }
+        .gemini-modal-backdrop {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5); z-index: 90;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .gemini-modal-content {
+            background: white; border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            width: 90%; max-width: 600px; z-index: 100; overflow: hidden;
+        }
+        .loader {
+            border: 4px solid #f3f3f3; border-top: 4px solid #3498db;
+            border-radius: 50%; width: 40px; height: 40px;
+            animation: spin 1s linear infinite; margin: 2rem auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
 </head>
-<body>
-    <div class="dashboard-layout">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <h1 class="sidebar-logo">QuickDash</h1>
+<body class="bg-gray-100">
+
+    <div class="flex h-screen overflow-hidden">
+        <aside class="w-64 flex-shrink-0 bg-gray-900 text-gray-300 flex flex-col sidebar-scroll overflow-y-auto">
+            <div class="h-16 flex items-center justify-center px-6 flex-shrink-0 border-b border-gray-800">
+                <a href="{% url 'dashboard_home' %}" class="flex items-center">
+                    <span class="ml-3 text-xl font-semibold text-white">QuickDash</span>
+                </a>
             </div>
-            <nav class="sidebar-nav">
-                <ul>
-                    <li class="nav-item active">
-                        <a href="{% url 'dashboard_home' %}">
-                            <span>🏠</span> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#">
-                            <span>📦</span> Orders
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#">
-                            <span>🛍️</span> Products
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#">
-                            <span>👥</span> Customers
-                        </a>
-                    </li>
-                </ul>
+            <nav class="flex-1 px-4 py-4 space-y-1">
+                <a href="{% url 'dashboard_home' %}" class="flex items-center px-4 py-2.5 text-sm font-medium rounded-md bg-gray-800 text-white">
+                    <svg class="h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6-4a1 1 0 001-1v-1a1 1 0 10-2 0v1a1 1 0 001 1zm5 0a1 1 0 001-1v-1a1 1 0 10-2 0v1a1 1 0 001 1z" /></svg>Dashboard</a>
+                <a href="#" class="flex items-center px-4 py-2.5 text-sm font-medium rounded-md text-gray-400 hover:bg-gray-800 hover:text-white"><svg class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>Orders</a>
+                <a href="#" class="flex items-center px-4 py-2.5 text-sm font-medium rounded-md text-gray-400 hover:bg-gray-800 hover:text-white"><svg class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>Products</a>
+                <a href="#" class="flex items-center px-4 py-2.5 text-sm font-medium rounded-md text-gray-400 hover:bg-gray-800 hover:text-white"><svg class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 016-6h6a6 6 0 016 6v1h-3m-6-16a4 4 0 11-8 0 4 4 0 018 0z" /></svg>Customers</a>
             </nav>
-            <div class="sidebar-footer">
-                <a href="{% url 'staff_logout' %}" class="logout-btn">Logout</a>
+            <div class="px-4 py-4 mt-auto border-t border-gray-800 flex-shrink-0">
+                <div class="flex items-center">
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-white">{{ request.user.name|default:request.user.email }}</p>
+                        <a href="{% url 'staff_logout' %}" class="text-xs text-red-400 hover:text-red-300">Logout</a>
+                    </div>
+                </div>
             </div>
         </aside>
-        <main class="main-content">
-            <header class="main-header">
-                <h2>{% block page_title %}Dashboard Overview{% endblock page_title %}</h2>
-                <div class="user-info">
-                    Welcome, {{ request.user.name|default:request.user.email }}
-                </div>
-            </header>
-            <div class="content-wrapper">
-                {% block content %}{% endblock content %}
-            </div>
-        </main>
+
+        <div class="flex-1 flex flex-col overflow-hidden">
+            {% block content %}{% endblock content %}
+        </div>
     </div>
+
+    <div id="main-popover" class="popover">
+        </div>
+
+    <div id="gemini-modal" class="gemini-modal-backdrop hidden">
+        </div>
+
+<script>
+// All the JavaScript from your dashboard.html file goes here
+document.addEventListener('DOMContentLoaded', () => {
+    // ... (Paste the entire <script> content from dashboard.html here) ...
+    // --- Variables ---
+    const popover = document.getElementById('main-popover');
+    const tableBody = document.querySelector('tbody');
+    let currentOrderData = {}; // Store data for the currently open popover
+
+    // --- Popover Logic ---
+    const showPopover = (triggerButton) => {
+        const row = triggerButton.closest('tr');
+        
+        // Extract data from the row's data attributes
+        const orderData = {
+            orderId: row.dataset.orderId,
+            customerName: row.dataset.customerName,
+            customerEmail: row.dataset.customerEmail,
+            items: JSON.parse(row.dataset.items),
+            total: row.dataset.total,
+        };
+        currentOrderData = orderData; // Save for AI modal
+
+        // --- DYNAMICALLY CREATE POPOVER CONTENT ---
+        const initials = orderData.customerName.split(' ').map(n => n[0]).join('');
+        let itemsHtml = '';
+        orderData.items.forEach(item => {
+            itemsHtml += `<div class="flex items-center"><div class="ml-3 flex-1"><p class="text-sm font-medium text-gray-900">${item}</p></div></div>`;
+        });
+
+        popover.innerHTML = `
+            <div class="p-5 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-900">Order ${orderData.orderId}</h3>
+                    <button id="popover-close" class="text-gray-400 hover:text-gray-600">&times;</button>
+                </div>
+                <div class="flex items-center mt-4">
+                    <span class="h-10 w-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-lg font-semibold">${initials}</span>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-900">${orderData.customerName}</p>
+                        <p class="text-sm text-gray-500">${orderData.customerEmail}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="p-5">
+                <div class="space-y-4 mb-4">${itemsHtml}</div>
+                <div class="flex justify-between items-center pt-4 border-t border-gray-200">
+                    <span class="text-sm font-medium text-gray-500">Total</span>
+                    <span class="text-lg font-semibold text-gray-900">${orderData.total}</span>
+                </div>
+            </div>
+            <div class="flex items-center justify-start space-x-2 p-4 bg-gray-50 border-t border-gray-200 rounded-b-lg">
+                <button id="draft-email-button" class="flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <span class="mr-1.5">✨</span>Draft Email
+                </button>
+            </div>
+        `;
+
+        // Position the popover
+        const rect = triggerButton.getBoundingClientRect();
+        popover.style.top = `${rect.bottom + window.scrollY + 5}px`;
+        popover.style.left = `${rect.left - popover.offsetWidth + 20}px`;
+        popover.classList.add('show');
+        
+        // Add event listeners for the new elements
+        document.getElementById('popover-close').addEventListener('click', hidePopover);
+        document.getElementById('draft-email-button').addEventListener('click', handleDraftButtonClick);
+    };
+
+    const hidePopover = () => {
+        popover.classList.remove('show');
+        currentOrderData = {};
+    };
+
+    // Event Delegation for opening popovers
+    tableBody.addEventListener('click', (event) => {
+        const triggerButton = event.target.closest('.popover-trigger');
+        if (triggerButton) {
+            event.stopPropagation();
+            showPopover(triggerButton);
+        }
+    });
+    
+    window.addEventListener('click', (event) => {
+        if (popover.classList.contains('show') && !popover.contains(event.target) && !event.target.closest('.popover-trigger')) {
+            hidePopover();
+        }
+    });
+
+    const handleDraftButtonClick = (event) => {
+        event.stopPropagation();
+        hidePopover();
+        
+        const geminiModal = document.getElementById('gemini-modal');
+        geminiModal.classList.remove('hidden');
+        geminiModal.innerHTML = `
+            <div class="gemini-modal-content">
+                <div class="flex items-center justify-between p-5 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">✨ AI Email Draft</h3>
+                    <button id="gemini-modal-close" class="text-gray-400 hover:text-gray-600">&times;</button>
+                </div>
+                <div class="p-5">
+                    <div id="gemini-loading">
+                        <p class="text-center text-gray-500">Generating draft...</p>
+                        <div class="loader"></div>
+                    </div>
+                    <div id="gemini-result" class="hidden">
+                        <p class="text-sm text-gray-600 mb-2">Here's a draft for <span class="font-medium">${currentOrderData.customerName}</span>.</p>
+                        <textarea id="gemini-textarea" class="w-full h-64 p-3 border border-gray-300 rounded-md" rows="10"></textarea>
+                    </div>
+                </div>
+                <div class="flex items-center justify-end space-x-3 p-4 bg-gray-50 border-t">
+                    <button id="gemini-copy-button" class="px-4 py-2 border rounded-md text-sm font-medium">Copy Text</button>
+                    <button id="gemini-modal-close-footer" class="px-4 py-2 rounded-md text-sm font-medium text-white bg-blue-600">Close</button>
+                </div>
+            </div>`;
+
+        // Add event listeners for modal
+        document.getElementById('gemini-modal-close').addEventListener('click', closeAiModal);
+        document.getElementById('gemini-modal-close-footer').addEventListener('click', closeAiModal);
+        document.getElementById('gemini-copy-button').addEventListener('click', copyAiText);
+        
+        handleDraftEmailClick();
+    };
+    
+    const closeAiModal = () => { document.getElementById('gemini-modal').classList.add('hidden'); };
+    
+    const copyAiText = () => {
+        const textarea = document.getElementById('gemini-textarea');
+        const copyButton = document.getElementById('gemini-copy-button');
+        navigator.clipboard.writeText(textarea.value).then(() => {
+            copyButton.innerText = 'Copied!';
+            setTimeout(() => { copyButton.innerText = 'Copy Text'; }, 2000);
+        });
+    };
+
+    async function handleDraftEmailClick() {
+        const userQuery = `Draft a follow-up email for this order:
+            - Customer Name: ${currentOrderData.customerName}
+            - Order Number: ${currentOrderData.orderId}
+            - Items: ${currentOrderData.items.join(', ')}
+            - Total: ${currentOrderData.total}`;
+        
+        try {
+            const generatedText = await mockGeminiAPI(userQuery);
+            document.getElementById('gemini-textarea').value = generatedText;
+            document.getElementById('gemini-loading').classList.add('hidden');
+            document.getElementById('gemini-result').classList.remove('hidden');
+        } catch (error) {
+            console.error("API call failed:", error);
+            document.getElementById('gemini-textarea').value = "Sorry, couldn't generate a draft.";
+        }
+    }
+    
+    async function mockGeminiAPI(userQuery) {
+        return new Promise(resolve => {
+            setTimeout(() => {
+                const draft = `Hi ${currentOrderData.customerName},\n\nHope you're having a great day!\n\nWe're just following up on your recent order, #${currentOrderData.orderId}, which included the ${currentOrderData.items.join(' and ')}. We wanted to personally thank you for your purchase.\n\nWe hope you're enjoying your new items! If you have any questions or issues, please don't hesitate to reply to this email.\n\nBest regards,\nThe QuickDash Team`;
+                resolve(draft);
+            }, 1500);
+        });
+    }
+
+    // --- Table Toolbar Logic ---
+    const tableToolbar = document.getElementById('table-toolbar');
+    const selectedCountSpan = document.getElementById('selected-count');
+    const allCheckboxes = document.querySelectorAll('tbody input[type="checkbox"]');
+    const mainCheckbox = document.querySelector('thead input[type="checkbox"]');
+    const closeToolbarBtn = document.getElementById('close-toolbar');
+    
+    function updateToolbar() {
+        const selectedCheckboxes = document.querySelectorAll('tbody input[type="checkbox"]:checked');
+        const count = selectedCheckboxes.length;
+        if (count > 0) {
+            selectedCountSpan.innerText = count;
+            tableToolbar.classList.remove('hidden');
+        } else {
+            tableToolbar.classList.add('hidden');
+        }
+        mainCheckbox.checked = count > 0 && count === allCheckboxes.length;
+    }
+    
+    if(tableBody) {
+      tableBody.addEventListener('change', (event) => {
+          if(event.target.type === 'checkbox') {
+              updateToolbar();
+          }
+      });
+    }
+    if(mainCheckbox) {
+      mainCheckbox.addEventListener('change', () => {
+          allCheckboxes.forEach(checkbox => checkbox.checked = mainCheckbox.checked);
+          updateToolbar();
+      });
+    }
+    if(closeToolbarBtn) {
+      closeToolbarBtn.addEventListener('click', () => {
+          mainCheckbox.checked = false;
+          allCheckboxes.forEach(checkbox => checkbox.checked = false);
+          updateToolbar();
+      });
+    }
+});
+</script>
+
 </body>
 </html>

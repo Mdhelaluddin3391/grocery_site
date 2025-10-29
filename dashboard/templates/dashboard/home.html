@@ -2,81 +2,125 @@
 
 {% block title %}Dashboard Home{% endblock title %}
 
-{% block page_title %}Dashboard Overview{% endblock page_title %}
-
 {% block content %}
-<div class="stats-grid">
-    <div class="stat-card">
-        <h4>Today's Orders</h4>
-        <p>{{ todays_orders }}</p>
+<header class="h-16 flex items-center justify-between px-8 bg-white border-b border-gray-200 flex-shrink-0">
+    <h1 class="text-2xl font-semibold text-gray-800">Dashboard Overview</h1>
+</header>
+
+<div class="flex-1 overflow-y-auto main-scroll p-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
+        <div class="bg-white p-5 rounded-lg shadow">
+            <h4 class="text-gray-500 font-medium">Today's Orders</h4>
+            <p class="text-3xl font-bold text-gray-800 mt-2">{{ todays_orders }}</p>
+        </div>
+        <div class="bg-white p-5 rounded-lg shadow">
+            <h4 class="text-gray-500 font-medium">Pending Orders</h4>
+            <p class="text-3xl font-bold text-gray-800 mt-2">{{ pending_orders }}</p>
+        </div>
+        <div class="bg-white p-5 rounded-lg shadow">
+            <h4 class="text-gray-500 font-medium">Total Revenue</h4>
+            <p class="text-3xl font-bold text-gray-800 mt-2">₹{{ total_revenue|floatformat:2 }}</p>
+        </div>
+        <div class="bg-white p-5 rounded-lg shadow">
+            <h4 class="text-gray-500 font-medium">Total Customers</h4>
+            <p class="text-3xl font-bold text-gray-800 mt-2">{{ total_customers }}</p>
+        </div>
+        <div class="bg-white p-5 rounded-lg shadow">
+            <h4 class="text-gray-500 font-medium">New Customers (Month)</h4>
+            <p class="text-3xl font-bold text-gray-800 mt-2">{{ new_customers_this_month }}</p>
+        </div>
     </div>
-    <div class="stat-card">
-        <h4>Pending Orders</h4>
-        <p>{{ pending_orders }}</p>
-    </div>
-    <div class="stat-card">
-        <h4>Total Revenue</h4>
-        <p>₹{{ total_revenue|floatformat:2 }}</p>
-    </div>
-    <div class="stat-card">
-        <h4>This Month's Revenue</h4>
-        <p>₹{{ monthly_revenue|floatformat:2 }}</p>
-    </div>
-    <div class="stat-card">
-        <h4>Total Customers</h4>
-        <p>{{ total_customers }}</p>
-    </div>
-    <div class="stat-card">
-        <h4>New Customers (This Month)</h4>
-        <p>{{ new_customers_this_month }}</p>
+
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="px-6 py-4 border-b">
+            <h3 class="text-lg font-semibold text-gray-800">Recent Orders</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full min-w-max text-left text-sm text-gray-600">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                        <th scope="col" class="w-12 px-6 py-3"><input type="checkbox" class="h-4 w-4 rounded border-gray-300"></th>
+                        <th scope="col" class="px-6 py-3 font-medium text-gray-500 uppercase tracking-wider">Order</th>
+                        <th scope="col" class="px-6 py-3 font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                        <th scope="col" class="px-6 py-3 font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="px-6 py-3 font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                        <th scope="col" class="px-6 py-3 font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th scope="col" class="w-16 px-6 py-3"></th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for order in recent_orders_page %}
+                    <tr class="hover:bg-gray-50"
+                        data-order-id="{{ order.order_id }}"
+                        data-customer-name="{{ order.user.name|default:order.user.phone_number }}"
+                        data-customer-email="{{ order.user.email|default:'N/A' }}"
+                        data-items='[{% for item in order.items.all %}"{{ item.product.name }}"{% if not forloop.last %},{% endif %}{% endfor %}]'
+                        data-total="₹{{ order.total_amount|floatformat:2 }}">
+                        <td class="px-6 py-4"><input type="checkbox" class="h-4 w-4 rounded border-gray-300"></td>
+                        <td class="px-6 py-4 font-medium text-gray-900">#{{ order.order_id }}</td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <span class="ml-3 font-medium text-gray-900">{{ order.user.name|default:order.user.phone_number }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if order.status == 'Delivered' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Delivered</span>
+                            {% elif order.status == 'Shipped' or order.status == 'Processing' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">{{ order.status }}</span>
+                            {% elif order.status == 'Cancelled' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Cancelled</span>
+                            {% else %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 font-medium text-gray-900">₹{{ order.total_amount|floatformat:2 }}</td>
+                        <td class="px-6 py-4">{{ order.created_at|date:"d M, Y" }}</td>
+                        <td class="px-6 py-4 text-right">
+                            <button class="popover-trigger text-gray-500 hover:text-gray-700">
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" /></svg>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-10 text-gray-500">No recent orders found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="px-6 py-4 border-t">
+            <div class="pagination">
+                <span class="step-links">
+                    {% if recent_orders_page.has_previous %}
+                        <a href="?page=1">&laquo; first</a>
+                        <a href="?page={{ recent_orders_page.previous_page_number }}">previous</a>
+                    {% endif %}
+                    <span class="current">
+                        Page {{ recent_orders_page.number }} of {{ recent_orders_page.paginator.num_pages }}.
+                    </span>
+                    {% if recent_orders_page.has_next %}
+                        <a href="?page={{ recent_orders_page.next_page_number }}">next</a>
+                        <a href="?page={{ recent_orders_page.paginator.num_pages }}">last &raquo;</a>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
     </div>
 </div>
 
-<div class="table-container">
-    <h3>Recent Orders</h3>
-    <table class="orders-table">
-        <thead>
-            <tr>
-                <th>Order ID</th>
-                <th>Customer</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Date</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for order in recent_orders_page %}
-            <tr>
-                <td>{{ order.order_id }}</td>
-                <td>{{ order.user.name|default:order.user.phone_number }}</td>
-                <td>₹{{ order.total_amount|floatformat:2 }}</td>
-                <td><span class="status-badge status-{{ order.status|lower }}">{{ order.status }}</span></td>
-                <td>{{ order.created_at|date:"d M, Y" }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="5">No recent orders found.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    
-    <div class="pagination">
-        <span class="step-links">
-            {% if recent_orders_page.has_previous %}
-                <a href="?page=1">&laquo; first</a>
-                <a href="?page={{ recent_orders_page.previous_page_number }}">previous</a>
-            {% endif %}
-
-            <span class="current">
-                Page {{ recent_orders_page.number }} of {{ recent_orders_page.paginator.num_pages }}.
-            </span>
-
-            {% if recent_orders_page.has_next %}
-                <a href="?page={{ recent_orders_page.next_page_number }}">next</a>
-                <a href="?page={{ recent_orders_page.paginator.num_pages }}">last &raquo;</a>
-            {% endif %}
-        </span>
+<div id="table-toolbar" class="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 hidden">
+    <div class="flex items-center bg-gray-900 text-white rounded-lg shadow-lg overflow-hidden">
+        <div class="px-4 py-2 border-r border-gray-700">
+            <span class="text-sm font-medium"><span id="selected-count">0</span> Selected</span>
+        </div>
+        <div class="flex items-center px-2 py-2 space-x-1">
+            <button class="flex items-center px-3 py-1 rounded-md text-sm font-medium">Export</button>
+        </div>
+        <button id="close-toolbar" class="px-3 py-2 text-gray-400 hover:text-white border-l border-gray-700">
+            &times;
+        </button>
     </div>
 </div>
 {% endblock content %}
