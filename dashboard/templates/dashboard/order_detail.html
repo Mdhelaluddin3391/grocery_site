@@ -1,0 +1,48 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block page_title %}Order Details{% endblock page_title %}
+
+{% block content %}
+<div class="bg-white p-8 rounded-lg shadow">
+    <div class="flex justify-between items-start mb-6">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-800">Order #{{ order.order_id }}</h2>
+            <p class="text-gray-500">{{ order.created_at|date:"d M, Y, P" }}</p>
+        </div>
+        <span class="px-3 py-1 text-sm font-semibold rounded-full bg-yellow-100 text-yellow-800">{{ order.status }}</span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="md:col-span-1">
+            <h3 class="text-lg font-semibold mb-3">Customer Details</h3>
+            <div class="space-y-2 text-sm">
+                <p><strong>Name:</strong> {{ order.user.name|default:"N/A" }}</p>
+                <p><strong>Phone:</strong> {{ order.user.phone_number|default:"N/A" }}</p>
+                <p><strong>Address:</strong><br>
+                    {{ order.address.address_line_1 }}<br>
+                    {{ order.address.city }}, {{ order.address.state }} - {{ order.address.pincode }}
+                </p>
+            </div>
+        </div>
+
+        <div class="md:col-span-2">
+            <h3 class="text-lg font-semibold mb-3">Order Items</h3>
+            <div class="divide-y">
+                {% for item in order.items.all %}
+                <div class="py-3 flex justify-between items-center">
+                    <div>
+                        <p class="font-medium">{{ item.product.name }}</p>
+                        <p class="text-sm text-gray-500">Qty: {{ item.quantity }} x ₹{{ item.price|floatformat:2 }}</p>
+                    </div>
+                    <p class="font-semibold">₹{{ item.get_subtotal|floatformat:2 }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="mt-4 pt-4 border-t flex justify-between items-center font-bold text-lg">
+                <span>Total Amount</span>
+                <span>₹{{ order.total_amount|floatformat:2 }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

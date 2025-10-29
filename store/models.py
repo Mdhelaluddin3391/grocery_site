@@ -53,6 +53,8 @@ class Product(models.Model):
     quantity = models.CharField(max_length=50, blank=True, null=True) # e.g., "500 ml"
     time = models.CharField(max_length=50, blank=True, null=True) # e.g., "25 MINS"
     stock = models.PositiveIntegerField(default=10, help_text="Available quantity")
+
+    barcode = models.CharField(max_length=100, blank=True, null=True, unique=True)
     # -----------------------------------
 
     is_special = models.BooleanField(default=False)

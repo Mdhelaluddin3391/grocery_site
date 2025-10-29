@@ -1,0 +1,54 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block page_title %}Live Orders{% endblock page_title %}
+
+{% block content %}
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+    <div class="bg-white p-4 rounded-lg shadow"><h4 class="text-gray-500 font-medium">Total Shipped Today</h4><p class="text-2xl font-bold mt-1">{{ stats.total_shipped_today }}</p></div>
+    <div class="bg-white p-4 rounded-lg shadow"><h4 class="text-gray-500 font-medium">Pack in Progress</h4><p class="text-2xl font-bold mt-1">{{ stats.pack_in_progress }}</p></div>
+    <div class="bg-white p-4 rounded-lg shadow"><h4 class="text-gray-500 font-medium">Packed</h4><p class="text-2xl font-bold mt-1">{{ stats.packed }}</p></div>
+    <div class="bg-white p-4 rounded-lg shadow"><h4 class="text-gray-500 font-medium">Dispatched</h4><p class="text-2xl font-bold mt-1">{{ stats.dispatched }}</p></div>
+    <div class="bg-white p-4 rounded-lg shadow"><h4 class="text-gray-500 font-medium">Delivered</h4><p class="text-2xl font-bold mt-1">{{ stats.delivered }}</p></div>
+</div>
+
+<div class="mb-6">
+    <form method="get">
+        <input type="text" name="q" value="{{ search_query }}" class="w-full px-4 py-2 border rounded-lg" placeholder="Search for order details with order ID...">
+    </form>
+</div>
+
+<div class="bg-white rounded-lg shadow overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full min-w-max text-left text-sm">
+            <thead class="bg-gray-50 border-b">
+                <tr>
+                    <th class="px-6 py-3 font-medium text-gray-500">Order ID</th>
+                    <th class="px-6 py-3 font-medium text-gray-500">Customer</th>
+                    <th class="px-6 py-3 font-medium text-gray-500">Packer</th>
+                    <th class="px-6 py-3 font-medium text-gray-500">Rider</th>
+                    <th class="px-6 py-3 font-medium text-gray-500">Status</th>
+                    <th class="px-6 py-3 font-medium text-gray-500">Total</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                {% for order in orders_page %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 font-medium text-blue-600 hover:underline">
+                        <a href="{% url 'order_detail' order.order_id %}">{{ order.order_id }}</a>
+                    </td>
+                    <td class="px-6 py-4">{{ order.user.name|default:"N/A" }}</td>
+                    <td class="px-6 py-4 text-gray-500">Not Assigned</td>
+                    <td class="px-6 py-4 text-gray-500">Not Assigned</td>
+                    <td class="px-6 py-4">{{ order.status }}</td>
+                    <td class="px-6 py-4 font-semibold">₹{{ order.total_amount|floatformat:2 }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center py-8 text-gray-500">No orders found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="px-6 py-4 border-t">
+        </div>
+</div>
+{% endblock %}
