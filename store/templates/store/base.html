@@ -35,7 +35,7 @@
                     <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Profile Icon">
                 </a>
                 {% else %}
-                <a href="{% url 'login' %}" title="Login / Register">
+                <a href="{% url 'login' %}?next={% url 'profile' %}" title="Login / Register">
                     <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Profile Icon">
                 </a>
                 {% endif %}

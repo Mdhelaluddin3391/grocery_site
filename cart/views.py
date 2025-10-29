@@ -20,7 +20,7 @@ def get_cart(request):
     cart, created = Cart.objects.get_or_create(session_key=session_key)
     return cart
 # -----------------------
-
+@login_required(login_url='/users/login/') # <--- YEH DECORATOR ADD KAREIN
 def add_to_cart(request, product_id):
     cart = get_cart(request)
     product = get_object_or_404(Product, id=product_id)
@@ -50,6 +50,7 @@ def add_to_cart(request, product_id):
     messages.success(request, f"'{product.name}' has been added to your cart.")
     return redirect(request.META.get('HTTP_REFERER', 'home'))
 
+@login_required(login_url='/users/login/') # <--- YEH DECORATOR ADD KAREIN
 def view_cart(request):
     cart = get_cart(request)
     context = {'cart': cart}

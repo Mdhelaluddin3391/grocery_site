@@ -120,6 +120,7 @@ SOCIALACCOUNT_AUTO_SIGNUP = True  # <--- YEH LINE ADD KAREIN
 
 LOGIN_REDIRECT_URL = '/dashboard/'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/dashboard/login/'
+LOGIN_URL = '/users/login/' # <--- YEH LINE ADD KAREIN
 
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
