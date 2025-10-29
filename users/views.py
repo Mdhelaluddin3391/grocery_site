@@ -12,6 +12,9 @@ import random
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .models import PhoneOTP, CustomerProfile, StaffProfile
+from django.contrib.auth.decorators import login_required
+from .models import PhoneOTP, CustomerProfile, StaffProfile, Address  # <--- 'Address' KO YAHAN ADD KAREIN
+from cart.models import Order
 
 
 
@@ -66,7 +69,10 @@ def verify_otp(request):
         otp_record.delete()
 
         # Create or get user and ensure they are marked as a customer.
-        user, _ = User.objects.get_or_create(phone_number=phone)
+        defaults = {
+            'email': f'{phone}@phone.local'  # Phone number se dummy email banayein
+        }
+        user, _ = User.objects.get_or_create(phone_number=phone, defaults=defaults)
         if not user.is_customer:
             user.is_customer = True
             user.save()

@@ -50,7 +50,7 @@ class StaffSocialAccountAdapter(DefaultSocialAccountAdapter):
                 user.is_staff = True
                 user.is_customer = False
                 user.email = sociallogin.account.extra_data.get('email')
-                user.username = user.email.split('@')[0]
+                # user.username = user.email.split('@')[0]
                 user.name = sociallogin.account.extra_data.get('name', 'Staff User')
 
     def save_user(self, request, sociallogin, form=None):
