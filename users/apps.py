@@ -1,5 +1,4 @@
 # users/apps.py
-
 from django.apps import AppConfig
 
 class UsersConfig(AppConfig):
@@ -7,5 +6,4 @@ class UsersConfig(AppConfig):
     name = 'users'
 
     def ready(self):
-        # The line that imported signals has been removed.
-        pass
+        import users.signals # Yeh line zaroori hai

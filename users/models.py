@@ -9,23 +9,25 @@ import random
 
 # -------------------- CUSTOM USER MANAGER --------------------
 class CustomUserManager(BaseUserManager):
-    def create_user(self, phone_number, password=None, **extra_fields):
-        if not phone_number:
-            raise ValueError('The Phone Number field must be set')
+    def create_user(self, email=None, phone_number=None, password=None, **extra_fields):
+        if not email and not phone_number:
+            raise ValueError('Either the Email or Phone Number field must be set')
 
-        if 'email' in extra_fields:
-            extra_fields['email'] = self.normalize_email(extra_fields['email'])
-
-        extra_fields.setdefault('is_customer', True)
+        if email:
+            email = self.normalize_email(email)
+            extra_fields.setdefault('email', email)
+        
         user = self.model(phone_number=phone_number, **extra_fields)
+
         if password:
             user.set_password(password)
         else:
             user.set_unusable_password()
+        
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, phone_number, password=None, **extra_fields):
+    def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_customer', False)
@@ -35,14 +37,13 @@ class CustomUserManager(BaseUserManager):
         if extra_fields.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_superuser=True.')
 
-        return self.create_user(phone_number, password, **extra_fields)
+        return self.create_user(email=email, password=password, **extra_fields)
 
 
 # -------------------- CUSTOM USER MODEL --------------------
 class CustomUser(AbstractBaseUser, PermissionsMixin):
-    # phone_number = models.CharField(max_length=15, unique=True)
-    phone_number = models.CharField(max_length=15, unique=True, null=True, blank=True) # <-- NAYA CODE
-    email = models.EmailField(unique=True, null=True, blank=True)
+    phone_number = models.CharField(max_length=15, unique=True, null=True, blank=True)
+    email = models.EmailField(unique=True) # Ab email zaroori hai
     name = models.CharField(max_length=100, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -51,11 +52,11 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     objects = CustomUserManager()
 
-    USERNAME_FIELD = 'phone_number'
+    USERNAME_FIELD = 'email' # Ise email par set kar diya gaya hai
     REQUIRED_FIELDS = ['name']
 
     def __str__(self):
-        return self.phone_number or self.email or f"User {self.id}"
+        return self.email or self.phone_number or f"User {self.id}"
 
 
 # -------------------- CUSTOMER PROFILE --------------------
@@ -74,7 +75,7 @@ class StaffProfile(models.Model):
     role = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):
-        return f"Profile for staff: {self.user.name or self.user.phone_number}"
+        return f"Profile for staff: {self.user.name or self.user.email}"
 
 
 # -------------------- ADDRESS --------------------
@@ -95,7 +96,7 @@ class Address(models.Model):
     longitude = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):
-        return f"{self.get_address_type_display()} address for {self.user.phone_number}"
+        return f"{self.get_address_type_display()} address for {self.user.phone_number or self.user.email}"
 
 
 # -------------------- PHONE OTP SYSTEM --------------------
