@@ -73,8 +73,9 @@ def verify_otp(request):
             'email': f'{phone}@phone.local'  # Phone number se dummy email banayein
         }
         user, _ = User.objects.get_or_create(phone_number=phone, defaults=defaults)
-        if not user.is_customer:
+        if not user.is_customer or user.is_staff:
             user.is_customer = True
+            user.is_staff = False  # <-- Yeh line add ki gayi hai
             user.save()
 
         # THIS IS THE KEY: Ensure a customer profile exists.
@@ -91,28 +92,6 @@ def logout_user(request):
     return redirect('/')
 
 
-# -------------------- CUSTOMER PROFILE --------------------
-# @login_required(login_url='/login/')
-# def profile_view(request):
-#     """
-#     Yeh view customer ke liye unka profile, orders, aur addresses dikhata hai.
-#     """
-#     profile = getattr(request.user, 'customerprofile', None)
-
-#     if not profile:
-#         messages.error(request, "This profile page is for customers only.")
-#         return redirect('home')
-
-#     # Customer ke saare orders aur addresses fetch karein
-#     orders = Order.objects.filter(user=request.user).order_by('-created_at')
-#     addresses = Address.objects.filter(user=request.user)
-
-#     context = {
-#         'profile': profile,
-#         'orders': orders,
-#         'addresses': addresses,
-#     }
-#     return render(request, 'users/profile.html', context)
 
 
 @login_required(login_url='/users/login/')
