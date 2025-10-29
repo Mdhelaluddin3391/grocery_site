@@ -89,20 +89,24 @@ def logout_user(request):
 @login_required(login_url='/login/')
 def profile_view(request):
     """
-    This profile view is ONLY for customers who log in via OTP.
+    Yeh view customer ke liye unka profile, orders, aur addresses dikhata hai.
     """
-    # Check if the logged-in user has a customer profile.
     profile = getattr(request.user, 'customerprofile', None)
 
-    if profile:
-        # If they have a customer profile, show the page.
-        return render(request, 'users/customer_profile.html', {'profile': profile})
-    else:
-        # If the logged-in user is not a customer (e.g., they are staff or a superuser),
-        # they should not be on this page. Redirect them away.
+    if not profile:
         messages.error(request, "This profile page is for customers only.")
         return redirect('home')
 
+    # Customer ke saare orders aur addresses fetch karein
+    orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    addresses = Address.objects.filter(user=request.user)
+
+    context = {
+        'profile': profile,
+        'orders': orders,
+        'addresses': addresses,
+    }
+    return render(request, 'users/profile.html', context)
 
 # -------------------- STAFF GOOGLE LOGIN HANDLER --------------------
 from allauth.socialaccount.models import SocialAccount

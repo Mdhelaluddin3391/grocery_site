@@ -3,28 +3,55 @@
 {% block title %}My Profile{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'users/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'users/css/styles.css' %}?v=1.1">
 {% endblock extra_css %}
 
 {% block content %}
 <div class="profile-container">
     <h1>Welcome, {{ user.name|default:user.phone_number }}</h1>
-    
+
     <div class="profile-section">
         <h2>My Rewards</h2>
         <p>You currently have <strong>{{ profile.loyalty_points }}</strong> loyalty points.</p>
-        </div>
+    </div>
 
     <div class="profile-section">
         <h2>My Orders</h2>
-        <p>Your recent orders will be displayed here.</p>
-        {# You can loop through user's orders here when you implement that logic #}
+        {% if orders %}
+            <div class="order-history">
+                {% for order in orders %}
+                <div class="order-card">
+                    <div class="order-header">
+                        <strong>Order ID:</strong> {{ order.order_id }}
+                        <span class="order-status status-{{ order.status|lower }}">{{ order.status }}</span>
+                    </div>
+                    <div class="order-body">
+                        <p><strong>Date:</strong> {{ order.created_at|date:"d M, Y" }}</p>
+                        <p><strong>Total Amount:</strong> ₹{{ order.total_amount|floatformat:2 }}</p>
+                        <p><strong>Payment Method:</strong> {{ order.get_payment_method_display }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>You haven't placed any orders yet. <a href="{% url 'home' %}">Start shopping!</a></p>
+        {% endif %}
     </div>
 
     <div class="profile-section">
         <h2>My Addresses</h2>
-        <p>Your saved addresses will be shown here.</p>
-         {# You can loop through user's addresses here #}
+        {% if addresses %}
+            <div class="address-list">
+                {% for address in addresses %}
+                <div class="address-card">
+                    <strong>{{ address.get_address_type_display }}</strong>
+                    <p>{{ address.address_line_1 }}, {{ address.city }}, {{ address.state }} - {{ address.pincode }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>You don't have any saved addresses.</p>
+        {% endif %}
     </div>
 
     <a href="{% url 'logout_user' %}" class="logout-link">Logout</a>

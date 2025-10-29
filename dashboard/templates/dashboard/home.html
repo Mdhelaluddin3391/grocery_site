@@ -19,8 +19,16 @@
         <p>₹{{ total_revenue|floatformat:2 }}</p>
     </div>
     <div class="stat-card">
+        <h4>This Month's Revenue</h4>
+        <p>₹{{ monthly_revenue|floatformat:2 }}</p>
+    </div>
+    <div class="stat-card">
         <h4>Total Customers</h4>
         <p>{{ total_customers }}</p>
+    </div>
+    <div class="stat-card">
+        <h4>New Customers (This Month)</h4>
+        <p>{{ new_customers_this_month }}</p>
     </div>
 </div>
 
@@ -37,7 +45,7 @@
             </tr>
         </thead>
         <tbody>
-            {% for order in recent_orders %}
+            {% for order in recent_orders_page %}
             <tr>
                 <td>{{ order.order_id }}</td>
                 <td>{{ order.user.name|default:order.user.phone_number }}</td>
@@ -52,5 +60,23 @@
             {% endfor %}
         </tbody>
     </table>
+    
+    <div class="pagination">
+        <span class="step-links">
+            {% if recent_orders_page.has_previous %}
+                <a href="?page=1">&laquo; first</a>
+                <a href="?page={{ recent_orders_page.previous_page_number }}">previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ recent_orders_page.number }} of {{ recent_orders_page.paginator.num_pages }}.
+            </span>
+
+            {% if recent_orders_page.has_next %}
+                <a href="?page={{ recent_orders_page.next_page_number }}">next</a>
+                <a href="?page={{ recent_orders_page.paginator.num_pages }}">last &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
 </div>
 {% endblock content %}
