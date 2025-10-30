@@ -13,6 +13,10 @@ from django.core.paginator import Paginator
 from django.contrib import messages
 from django.http import JsonResponse
 from django.db.models.functions import TruncHour, TruncMonth
+from django.views.decorators.csrf import csrf_exempt
+import json
+from store.models import Product
+from wms.models import Inventory
 
 def staff_check(user):
     return user.is_authenticated and user.is_staff
@@ -49,7 +53,7 @@ def dashboard_home_view(request):
 
 @user_passes_test(staff_check, login_url='staff_login')
 def live_orders_view(request):
-    order_list = Order.objects.select_related('user', 'picking_job__picker').all().order_by('-created_at')
+    order_list = Order.objects.select_related('user', 'picker').all().order_by('-created_at')
     start_date_str = request.GET.get('start_date')
     end_date_str = request.GET.get('end_date')
     if start_date_str and end_date_str:
@@ -152,14 +156,14 @@ def cancel_order_view(request, order_id):
     return redirect('live_orders')
 
 def export_orders_csv(request):
-    order_list = Order.objects.select_related('user', 'picking_job__picker').all().order_by('-created_at')
+    order_list = Order.objects.select_related('user', 'picker').all().order_by('-created_at')
     # Aapke diye gaye code se filtering logic yahan add hoga
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="orders_report.csv"'
     writer = csv.writer(response)
     writer.writerow(['Order ID', 'Customer', 'Picker', 'Status', 'Total', 'Date'])
     for order in order_list:
-        picker_name = order.picking_job.picker.name if hasattr(order, 'picking_job') and order.picking_job.picker else 'N/A'
+        picker_name = order.picker.name if order.picker else 'N/A'
         writer.writerow([order.order_id, order.user.name if order.user else 'N/A', picker_name, order.status, order.total_amount, order.created_at.strftime('%Y-%m-%d %H:%M')])
     return response
 
@@ -222,17 +226,57 @@ def cancel_order_view(request, order_id):
     return redirect('live_orders')
 
 @user_passes_test(staff_check, login_url='staff_login')
-def packed_orders_view(request):
-    """
-    Manager ko sabhi packed orders dikhata hai, rider assign karne ke option ke saath.
-    """
-    packed_orders = Order.objects.filter(status='Packed').order_by('created_at')
+def wms_dashboard_view(request):
+    return render(request, 'dashboard/wms.html')
 
-    # Sabhi available riders (staff users) ko fetch karein
-    available_riders = CustomUser.objects.filter(is_staff=True, is_superuser=False)
+@user_passes_test(staff_check, login_url='staff_login')
+def get_product_by_barcode_api(request, barcode):
+    try:
+        product = Product.objects.get(barcode=barcode)
+        data = {
+            'status': 'success',
+            'product': {
+                'id': product.id,
+                'name': product.name,
+                'price': str(product.price),
+                'image': product.image.url if product.image else 'https://via.placeholder.com/150',
+                'stock': product.stock,
+            }
+        }
+    except Product.DoesNotExist:
+        data = {'status': 'error', 'message': 'Product not found'}
+    
+    return JsonResponse(data)
 
-    context = {
-        'packed_orders': packed_orders,
-        'available_riders': available_riders,
-    }
-    return render(request, 'dashboard/packed_orders.html', context)
+@csrf_exempt
+@user_passes_test(staff_check, login_url='staff_login')
+def adjust_stock_api(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            product_id = data.get('product_id')
+            action = data.get('action')
+
+            product = get_object_or_404(Product, id=product_id)
+
+            if action == 'increment':
+                product.stock += 1
+            elif action == 'decrement':
+                if product.stock > 0:
+                    product.stock -= 1
+                else:
+                    return JsonResponse({'status': 'error', 'message': 'Stock cannot be less than zero.'}, status=400)
+            
+            product.save()
+            
+            # Also update the Inventory model
+            inventory, _ = Inventory.objects.get_or_create(product=product)
+            inventory.quantity = product.stock
+            inventory.save()
+            
+            return JsonResponse({'status': 'success', 'new_stock': product.stock})
+
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)

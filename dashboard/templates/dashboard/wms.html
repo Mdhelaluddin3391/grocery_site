@@ -1,20 +1,25 @@
 {% extends 'dashboard/base_dashboard.html' %}
-
-{% block page_title %}Inventory & WMS{% endblock page_title %}
+{% block page_title %}WMS Scanner & Stock Adjust{% endblock page_title %}
 
 {% block content %}
 <div class="p-8">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        {# --- Barcode Scanner Section --- #}
         <div class="bg-white p-6 rounded-lg shadow">
-            <h3 class="text-xl font-semibold mb-4">Barcode Scanner</h3>
-            <div id="reader" class="w-full border rounded-lg overflow-hidden"></div>
-            <p id="scan-result" class="mt-4 text-center font-medium text-gray-600">Scanning...</p>
+            <h3 class="text-xl font-semibold mb-4">Scan Product Barcode</h3>
+            <div id="reader" class="w-full border rounded-lg overflow-hidden mb-4"></div>
+            <button id="rescan-btn" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 hidden">
+                Scan Another Product
+            </button>
+            <p id="scan-result" class="mt-2 text-center font-medium text-gray-600">Waiting for scan...</p>
         </div>
 
+        {# --- Product Details & Actions Section --- #}
         <div class="bg-white p-6 rounded-lg shadow">
-            <h3 class="text-xl font-semibold mb-4">Product Details</h3>
+            <h3 class="text-xl font-semibold mb-4">Product Details & Actions</h3>
             <div id="product-details-container" class="text-center text-gray-500">
-                <p>Scan a barcode to see product details here.</p>
+                <p>Scan a barcode to see product details and manage stock.</p>
             </div>
         </div>
     </div>
@@ -26,31 +31,36 @@
 document.addEventListener('DOMContentLoaded', () => {
     const scanResultEl = document.getElementById('scan-result');
     const productDetailsContainer = document.getElementById('product-details-container');
+    const readerDiv = document.getElementById('reader');
+    const rescanBtn = document.getElementById('rescan-btn');
+    let html5QrcodeScanner;
+
+    function startScanner() {
+        html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+        html5QrcodeScanner.render(onScanSuccess, onScanError);
+        readerDiv.style.display = 'block';
+        rescanBtn.classList.add('hidden');
+        scanResultEl.textContent = 'Waiting for scan...';
+        productDetailsContainer.innerHTML = '<p>Scan a barcode to see product details here.</p>';
+    }
 
     function onScanSuccess(decodedText, decodedResult) {
-        // Handle on success condition with the decoded text or result.
-        console.log(`Scan result: ${decodedText}`, decodedResult);
-        scanResultEl.textContent = `Scanned: ${decodedText}`;
-        
-        // Stop scanning after one successful scan
+        scanResultEl.textContent = `✅ Scanned: ${decodedText}`;
         html5QrcodeScanner.clear();
-
-        // Fetch product details from our API
+        readerDiv.style.display = 'none';
+        rescanBtn.classList.remove('hidden');
         fetchProductDetails(decodedText);
     }
 
-    function onScanError(errorMessage) {
-        // handle on error condition, usually ignored.
-    }
+    function onScanError(errorMessage) { /* Ignore errors */ }
 
-    let html5QrcodeScanner = new Html5QrcodeScanner(
-        "reader", { fps: 10, qrbox: 250 });
-    html5QrcodeScanner.render(onScanSuccess, onScanError);
+    rescanBtn.addEventListener('click', startScanner);
 
     async function fetchProductDetails(barcode) {
         productDetailsContainer.innerHTML = '<p>Fetching details...</p>';
         try {
-            const response = await fetch(`/api/get-product-by-barcode/${barcode}/`);
+            const response = await fetch(`/dashboard/api/get-product-by-barcode/${barcode}/`);
+            if (!response.ok) throw new Error('Product not found in database');
             const data = await response.json();
 
             if (data.status === 'success') {
@@ -58,17 +68,57 @@ document.addEventListener('DOMContentLoaded', () => {
                 productDetailsContainer.innerHTML = `
                     <img src="${product.image}" alt="${product.name}" class="w-40 h-40 object-contain mx-auto mb-4 rounded-lg">
                     <h4 class="text-lg font-bold">${product.name}</h4>
-                    <p class="text-2xl font-bold text-blue-600 mt-2">₹${product.price}</p>
-                    <p class="text-md text-gray-600 mt-1">Current Stock: <strong>${product.stock}</strong></p>
+                    <p class="text-gray-500 text-sm">₹${product.price}</p>
+                    
+                    <div class="mt-6">
+                        <h5 class="font-semibold mb-2">Live Stock Management</h5>
+                        <div class="flex items-center justify-center gap-4" data-product-id="${product.id}">
+                            <button class="stock-adjust-btn bg-red-500 text-white rounded-full w-10 h-10 text-2xl font-bold">-</button>
+                            <p class="text-4xl font-bold text-blue-600 w-24 text-center" id="current-stock-display">
+                                ${product.stock}
+                            </p>
+                            <button class="stock-adjust-btn bg-green-500 text-white rounded-full w-10 h-10 text-2xl font-bold">+</button>
+                        </div>
+                    </div>
                 `;
+                addStockAdjustListeners();
             } else {
-                productDetailsContainer.innerHTML = `<p class="text-red-500 font-semibold">${data.message}</p>`;
+                productDetailsContainer.innerHTML = \`<p class="text-red-500 font-semibold">${data.message}</p>\`;
             }
         } catch (error) {
-            console.error('Error fetching product:', error);
-            productDetailsContainer.innerHTML = '<p class="text-red-500">Could not fetch product details.</p>';
+            productDetailsContainer.innerHTML = \`<p class="text-red-500 font-semibold">${error.message}</p>\`;
         }
     }
+
+    function addStockAdjustListeners() {
+        document.querySelectorAll('.stock-adjust-btn').forEach(button => {
+            button.addEventListener('click', async () => {
+                const action = button.textContent === '+' ? 'increment' : 'decrement';
+                const container = button.closest('[data-product-id]');
+                const productId = container.dataset.productId;
+                
+                try {
+                    const response = await fetch("{% url 'api_adjust_stock' %}", {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ product_id: productId, action: action })
+                    });
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        document.getElementById('current-stock-display').textContent = data.new_stock;
+                    } else {
+                        alert(\`Error: ${data.message}\`);
+                    }
+                } catch (error) {
+                    console.error('Error adjusting stock:', error);
+                    alert('Could not update stock. Please check console.');
+                }
+            });
+        });
+    }
+
+    // Start scanner on page load
+    startScanner();
 });
 </script>
 {% endblock %}

@@ -10,9 +10,9 @@ def staff_check(user):
 
 @user_passes_test(staff_check, login_url='staff_login')
 def picker_dashboard_view(request):
-    # Sirf assigned aur in-progress jobs dikhayein
+    # CORRECTED: Filter by the 'picker' on the related 'Order' model
     assigned_jobs = PickingJob.objects.filter(
-        picker=request.user,
+        order__picker=request.user,
         status__in=['Assigned', 'In Progress']
     ).order_by('created_at')
     context = {'assigned_jobs': assigned_jobs}
@@ -20,7 +20,8 @@ def picker_dashboard_view(request):
 
 @user_passes_test(staff_check, login_url='staff_login')
 def picking_job_detail_view(request, job_id):
-    job = get_object_or_404(PickingJob, id=job_id, picker=request.user)
+    # CORRECTED: Filter by the 'picker' on the related 'Order' model
+    job = get_object_or_404(PickingJob, id=job_id, order__picker=request.user)
     # Job open karte hi status 'In Progress' kar dein
     if job.status == 'Assigned':
         job.status = 'In Progress'

@@ -19,6 +19,8 @@ urlpatterns = [
     path('api/charts/orders-per-hour/', views.orders_per_hour_api, name='api_orders_per_hour'),
     path('api/charts/top-selling-items/', views.top_selling_items_api, name='api_top_selling_items'),
     path('api/charts/monthly-revenue/', views.monthly_revenue_api, name='api_monthly_revenue'),
-    path('order/cancel/<str:order_id>/', views.cancel_order_view, name='cancel_order'),
-    path('packed-orders/', views.packed_orders_view, name='packed_orders'),
+    # WMS URLs
+    path('wms/', views.wms_dashboard_view, name='wms_dashboard'),
+    path('api/get-product-by-barcode/<str:barcode>/', views.get_product_by_barcode_api, name='get_product_by_barcode'),
+    path('api/adjust-stock/', views.adjust_stock_api, name='api_adjust_stock'),
 ]

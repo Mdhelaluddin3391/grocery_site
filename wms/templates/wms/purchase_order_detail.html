@@ -1,0 +1,18 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block page_title %}PO Details{% endblock page_title %}
+{% block content %}
+<div class="bg-white p-6 rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold text-gray-800">PO #{{ po.po_number }}</h2>
+    <p class="text-sm text-gray-500">Vendor: {{ po.vendor.name }}</p>
+    <p class="text-sm text-gray-500">Status: {{ po.status }}</p>
+    <div class="mt-4">
+        <h3 class="text-lg font-semibold mb-3">Items</h3>
+        <ul class="divide-y">
+            {% for item in po.items.all %}
+            <li class="py-2">{{ item.product.name }} - Qty: {{ item.quantity }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    <a href="{% url 'receive_goods' po.id %}" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 mt-4 inline-block text-center">Receive Goods</a>
+</div>
+{% endblock %}

@@ -14,7 +14,7 @@ class PickingJob(models.Model):
         ('Completed', 'Completed'),
     )
     order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='picking_job')
-    picker = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='picking_jobs')
+    # picker = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='picking_jobs')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Unassigned')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

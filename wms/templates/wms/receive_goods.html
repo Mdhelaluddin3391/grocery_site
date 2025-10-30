@@ -1,0 +1,43 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block page_title %}Receive Goods{% endblock page_title %}
+{% block content %}
+<div class="bg-white p-6 rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold text-gray-800">Receive Goods for PO #{{ po.po_number }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <h3 class="text-lg font-semibold mb-3 mt-4">Items</h3>
+        <div class="overflow-x-auto">
+            <table class="w-full min-w-max text-left text-sm">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 font-medium text-gray-500">Product</th>
+                        <th class="px-6 py-3 font-medium text-gray-500">Expected Qty</th>
+                        <th class="px-6 py-3 font-medium text-gray-500">Received Qty</th>
+                        <th class="px-6 py-3 font-medium text-gray-500">Location</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    {% for item in po.items.all %}
+                    <tr>
+                        <td class="px-6 py-4 font-medium">{{ item.product.name }}</td>
+                        <td class="px-6 py-4">{{ item.quantity }}</td>
+                        <td class="px-6 py-4">
+                            <input type="number" name="quantity_{{ item.product.id }}" value="{{ item.quantity }}" class="w-24 p-2 border rounded-md">
+                        </td>
+                        <td class="px-6 py-4">
+                            <select name="location_{{ item.product.id }}" class="w-48 p-2 border rounded-md">
+                                {% for location in locations %}
+                                <option value="{{ location.id }}">{{ location.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 mt-4">Receive</button>
+    </form>
+</div>
+{% endblock %}
