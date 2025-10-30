@@ -1,0 +1,42 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block page_title %}My Deliveries{% endblock page_title %}
+
+{% block content %}
+{% if messages %}
+    {% for message in messages %}
+    <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6" role="alert">
+        <p>{{ message }}</p>
+    </div>
+    {% endfor %}
+{% endif %}
+
+<div class="bg-white rounded-lg shadow-md overflow-hidden">
+    <div class="p-6 border-b">
+        <h3 class="text-xl font-semibold">Orders Out for Delivery</h3>
+    </div>
+    <div class="divide-y">
+        {% for order in assigned_orders %}
+        <div class="p-6">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="font-bold text-blue-600">Order #{{ order.order_id }}</p>
+                    <p class="text-sm text-gray-600"><strong>Customer:</strong> {{ order.user.name }}</p>
+                    <p class="text-sm text-gray-500"><strong>Address:</strong> {{ order.address.address_line_1 }}, {{ order.address.city }}</p>
+                    <p class="text-lg font-bold mt-2">Amount to Collect: ₹{{ order.total_amount|floatformat:2 }}</p>
+                </div>
+                <div>
+                    <form action="{% url 'mark_as_delivered' order.order_id %}" method="post" onsubmit="return confirm('Confirm delivery for order #{{ order.order_id }}?');">
+                        {% csrf_token %}
+                        <button type="submit" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700">
+                            Mark as Delivered
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="p-8 text-center text-gray-500">No orders assigned for delivery right now.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

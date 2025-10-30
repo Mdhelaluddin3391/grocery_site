@@ -1,0 +1,52 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block page_title %}Customer Management{% endblock page_title %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-md overflow-hidden">
+    <div class="p-6 border-b">
+        <h3 class="text-xl font-semibold">All Customers</h3>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full min-w-max text-left text-sm">
+            <thead class="bg-gray-50 border-b">
+                <tr>
+                    <th class="px-6 py-3 font-medium text-gray-500">Name</th>
+                    <th class="px-6 py-3 font-medium text-gray-500">Email</th>
+                    <th class="px-6 py-3 font-medium text-gray-500">Phone Number</th>
+                    <th class="px-6 py-3 font-medium text-gray-500">Date Joined</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                {% for customer in customers_page %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 font-medium">{{ customer.name|default:"N/A" }}</td>
+                    <td class="px-6 py-4 text-gray-600">{{ customer.email }}</td>
+                    <td class="px-6 py-4 text-gray-600">{{ customer.phone_number|default:"N/A" }}</td>
+                    <td class="px-6 py-4 text-gray-600">{{ customer.date_joined|date:"d M, Y" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="text-center py-8 text-gray-500">No customers found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="p-6 border-t flex justify-between items-center">
+        <div>
+            <span class="text-sm text-gray-600">
+                Page {{ customers_page.number }} of {{ customers_page.paginator.num_pages }}
+            </span>
+        </div>
+        <div>
+            {% if customers_page.has_previous %}
+                <a href="?page=1" class="px-3 py-1 border rounded-md text-sm">&laquo; First</a>
+                <a href="?page={{ customers_page.previous_page_number }}" class="px-3 py-1 border rounded-md text-sm">Previous</a>
+            {% endif %}
+            {% if customers_page.has_next %}
+                <a href="?page={{ customers_page.next_page_number }}" class="px-3 py-1 border rounded-md text-sm">Next</a>
+                <a href="?page={{ customers_page.paginator.num_pages }}" class="px-3 py-1 border rounded-md text-sm">Last &raquo;</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

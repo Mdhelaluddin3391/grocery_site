@@ -1,19 +1,70 @@
 {% extends 'dashboard/base_dashboard.html' %}
-
 {% block page_title %}Live Orders{% endblock page_title %}
 
 {% block content %}
-<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-    <div class="bg-white p-4 rounded-lg shadow"><h4 class="text-gray-500 font-medium">Total Shipped Today</h4><p class="text-2xl font-bold mt-1">{{ stats.total_shipped_today }}</p></div>
-    <div class="bg-white p-4 rounded-lg shadow"><h4 class="text-gray-500 font-medium">Pack in Progress</h4><p class="text-2xl font-bold mt-1">{{ stats.pack_in_progress }}</p></div>
-    <div class="bg-white p-4 rounded-lg shadow"><h4 class="text-gray-500 font-medium">Packed</h4><p class="text-2xl font-bold mt-1">{{ stats.packed }}</p></div>
-    <div class="bg-white p-4 rounded-lg shadow"><h4 class="text-gray-500 font-medium">Dispatched</h4><p class="text-2xl font-bold mt-1">{{ stats.dispatched }}</p></div>
-    <div class="bg-white p-4 rounded-lg shadow"><h4 class="text-gray-500 font-medium">Delivered</h4><p class="text-2xl font-bold mt-1">{{ stats.delivered }}</p></div>
+
+{% if messages %}
+    {% for message in messages %}
+    <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6" role="alert">
+        <p>{{ message }}</p>
+    </div>
+    {% endfor %}
+{% endif %}
+
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white p-4 rounded-lg shadow">
+        <h4 class="text-gray-500 font-medium">Pending</h4>
+        <p class="text-2xl font-bold text-yellow-600 mt-1">{{ stats.pending }}</p>
+    </div>
+    <div class="bg-white p-4 rounded-lg shadow">
+        <h4 class="text-gray-500 font-medium">Processing</h4>
+        <p class="text-2xl font-bold text-blue-600 mt-1">{{ stats.processing }}</p>
+    </div>
+    <div class="bg-white p-4 rounded-lg shadow">
+        <h4 class="text-gray-500 font-medium">Packed</h4>
+        <p class="text-2xl font-bold text-green-600 mt-1">{{ stats.packed }}</p>
+    </div>
+    <div class="bg-white p-4 rounded-lg shadow">
+        <h4 class="text-gray-500 font-medium">Dispatched</h4>
+        <p class="text-2xl font-bold text-indigo-600 mt-1">{{ stats.dispatched }}</p>
+    </div>
 </div>
 
-<div class="mb-6">
-    <form method="get">
-        <input type="text" name="q" value="{{ search_query }}" class="w-full px-4 py-2 border rounded-lg" placeholder="Search for order details with order ID...">
+<div class="border-b border-gray-200 mb-6">
+    <nav class="-mb-px flex space-x-6 overflow-x-auto" aria-label="Tabs">
+        <a href="{% url 'live_orders' %}" class="{% if active_status == 'All' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">All Orders</a>
+        <a href="?status=Pending" class="{% if active_status == 'Pending' %}border-yellow-500 text-yellow-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Pending</a>
+        <a href="?status=Processing" class="{% if active_status == 'Processing' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Processing</a>
+        <a href="?status=Packed" class="{% if active_status == 'Packed' %}border-green-500 text-green-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Packed</a>
+        <a href="?status=Dispatched" class="{% if active_status == 'Dispatched' %}border-indigo-500 text-indigo-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Dispatched</a>
+    </nav>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    <form method="get" class="w-full">
+        <input type="text" name="q" value="{{ search_query }}" class="w-full px-4 py-2 border rounded-lg" placeholder="Search by Order ID...">
+    </form>
+    <div class="text-right">
+        <button onclick="toggleFilter()" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300">
+            Filter by Date & Download
+        </button>
+    </div>
+</div>
+
+<div id="filter-section" class="bg-white p-4 rounded-lg shadow-sm mb-6" style="display: none;">
+    <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+        <div>
+            <label for="start_date" class="block text-sm font-medium text-gray-700">Start Date</label>
+            <input type="date" name="start_date" id="start_date" value="{{ start_date|default:'' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+        </div>
+        <div>
+            <label for="end_date" class="block text-sm font-medium text-gray-700">End Date</label>
+            <input type="date" name="end_date" id="end_date" value="{{ end_date|default:'' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+        </div>
+        <div class="md:col-span-2 flex items-center gap-4">
+            <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700">Apply Filter</button>
+            <a href="{% url 'export_orders_csv' %}?{{ request.GET.urlencode }}" class="w-full text-center bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700">Download CSV</a>
+        </div>
     </form>
 </div>
 
@@ -24,23 +75,62 @@
                 <tr>
                     <th class="px-6 py-3 font-medium text-gray-500">Order ID</th>
                     <th class="px-6 py-3 font-medium text-gray-500">Customer</th>
-                    <th class="px-6 py-3 font-medium text-gray-500">Packer</th>
-                    <th class="px-6 py-3 font-medium text-gray-500">Rider</th>
+                    <th class="px-6 py-3 font-medium text-gray-500">Picker</th>
                     <th class="px-6 py-3 font-medium text-gray-500">Status</th>
-                    <th class="px-6 py-3 font-medium text-gray-500">Total</th>
+                    <th class="px-6 py-3 font-medium text-gray-500 text-right">Total</th>
+                    <th class="px-6 py-3 font-medium text-gray-500">Actions</th>
                 </tr>
             </thead>
             <tbody class="divide-y">
                 {% for order in orders_page %}
                 <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 font-medium text-blue-600 hover:underline">
-                        <a href="{% url 'order_detail' order.order_id %}">{{ order.order_id }}</a>
-                    </td>
-                    <td class="px-6 py-4">{{ order.user.name|default:"N/A" }}</td>
-                    <td class="px-6 py-4 text-gray-500">Not Assigned</td>
-                    <td class="px-6 py-4 text-gray-500">Not Assigned</td>
-                    <td class="px-6 py-4">{{ order.status }}</td>
-                    <td class="px-6 py-4 font-semibold">₹{{ order.total_amount|floatformat:2 }}</td>
+                    {# ... (template ka upar ka code waise hi) ... #}
+
+<td class="px-6 py-4">
+    <div class="flex items-center gap-2">
+        {# --- ACTION BUTTONS KA NAYA LOGIC --- #}
+
+        {# Pending Orders ke liye #}
+        {% if order.status == 'Pending' %}
+            <a href="{% url 'delivery_map' %}?lat={{ order.address.latitude }}&lng={{ order.address.longitude }}" class="px-3 py-1 text-xs font-medium text-white bg-gray-500 rounded-md hover:bg-gray-600" title="View Location">
+                Map
+            </a>
+            <form action="{% url 'cancel_order' order.order_id %}" method="post" onsubmit="return confirm('Are you sure you want to cancel this order?');">
+                {% csrf_token %}
+                <button type="submit" class="px-3 py-1 text-xs font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Cancel</button>
+            </form>
+
+        {# Processing aur Packed Orders ke liye #}
+        {% elif order.status == 'Processing' or order.status == 'Packed' %}
+            <form action="{% url 'update_order_status_from_list' order.order_id %}" method="post">
+                {% csrf_token %}
+                {% if order.status == 'Processing' %}
+                    <input type="hidden" name="next_status" value="Packed">
+                    <button type="submit" class="px-3 py-1 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">Move to Packed</button>
+                {% elif order.status == 'Packed' %}
+                     <input type="hidden" name="next_status" value="Dispatched">
+                    <button type="submit" class="px-3 py-1 text-xs font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700">Dispatch</button>
+                {% endif %}
+            </form>
+            <form action="{% url 'cancel_order' order.order_id %}" method="post" onsubmit="return confirm('Are you sure you want to cancel this order?');">
+                {% csrf_token %}
+                <button type="submit" class="px-3 py-1 text-xs font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Cancel</button>
+            </form>
+        
+        {# Dispatched Orders ke liye #}
+        {% elif order.status == 'Dispatched' %}
+            <a href="{% url 'delivery_map' %}?lat={{ order.address.latitude }}&lng={{ order.address.longitude }}" class="px-3 py-1 text-xs font-medium text-white bg-gray-500 rounded-md hover:bg-gray-600" title="View Location">
+                Track
+            </a>
+        
+        {# Baaki sabhi ke liye #}
+        {% else %}
+            <span class="text-xs text-gray-400">No Action</span>
+        {% endif %}
+    </div>
+</td>
+
+{# ... (template ka baaki code waise hi) ... #}
                 </tr>
                 {% empty %}
                 <tr><td colspan="6" class="text-center py-8 text-gray-500">No orders found.</td></tr>
@@ -48,7 +138,18 @@
             </tbody>
         </table>
     </div>
-    <div class="px-6 py-4 border-t">
-        </div>
+    {# ... Pagination ka code waise hi rahega ... #}
 </div>
+
+<script>
+    function toggleFilter() {
+        var filterSection = document.getElementById('filter-section');
+        if (filterSection.style.display === 'none') {
+            filterSection.style.display = 'block';
+        } else {
+            filterSection.style.display = 'none';
+        }
+    }
+</script>
+
 {% endblock %}

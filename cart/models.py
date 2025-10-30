@@ -3,7 +3,7 @@
 from django.db import models
 from store.models import Product
 from decimal import Decimal
-from django.conf import settings # Ise import karein
+from django.conf import settings
 
 class Cart(models.Model):
     session_key = models.CharField(max_length=40, db_index=True)
@@ -45,7 +45,14 @@ class CartItem(models.Model):
         return self.product.price * self.quantity
 
 class Order(models.Model):
-    STATUS_CHOICES = (('Pending', 'Pending'), ('Processing', 'Processing'), ('Shipped', 'Shipped'), ('Delivered', 'Delivered'), ('Cancelled', 'Cancelled'))
+    STATUS_CHOICES = (
+        ('Pending', 'Pending'),
+        ('Processing', 'Processing'),
+        ('Packed', 'Packed'),
+        ('Dispatched', 'Dispatched'),
+        ('Delivered', 'Delivered'),
+        ('Cancelled', 'Cancelled')
+    )
     PAYMENT_CHOICES = (('COD', 'Cash on Delivery'), ('Online', 'Online'))
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
@@ -55,12 +62,25 @@ class Order(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
     payment_method = models.CharField(max_length=20, choices=PAYMENT_CHOICES, default='COD')
     payment_status = models.BooleanField(default=False)
+    
+    # --- YEH DO NAYE FIELDS ADD KIYE GAYE HAIN ---
+    picker = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.SET_NULL, 
+        null=True, blank=True, 
+        related_name='picked_orders'
+    )
+    rider = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.SET_NULL, 
+        null=True, blank=True, 
+        related_name='delivered_orders'
+    )
+    # -----------------------------------------------
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-    # shipping_address field ki zaroorat nahi agar Address model hai
-    # shipping_address = models.TextField() 
-
     def __str__(self):
         return f"Order {self.order_id}"
 

@@ -1,0 +1,79 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block page_title %}Business Analytics{% endblock page_title %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        <h3 class="text-lg font-semibold mb-4">Orders per Hour (Last 24 Hours)</h3>
+        <canvas id="ordersPerHourChart"></canvas>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        <h3 class="text-lg font-semibold mb-4">Top 5 Selling Items</h3>
+        <canvas id="topItemsChart"></canvas>
+    </div>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    
+    // --- Orders Per Hour Chart (Line Chart) ---
+    try {
+        const ordersResponse = await fetch("{% url 'api_orders_per_hour' %}");
+        const ordersData = await ordersResponse.json();
+
+        const ctxOrders = document.getElementById('ordersPerHourChart').getContext('2d');
+        new Chart(ctxOrders, {
+            type: 'line',
+            data: {
+                labels: ordersData.labels,
+                datasets: [{
+                    label: 'Orders',
+                    data: ordersData.data,
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.2,
+                    fill: true
+                }]
+            }
+        });
+    } catch (error) {
+        console.error("Error fetching orders per hour data:", error);
+    }
+
+    // --- Top Selling Items Chart (Bar Chart) ---
+    try {
+        const itemsResponse = await fetch("{% url 'api_top_selling_items' %}");
+        const itemsData = await itemsResponse.json();
+
+        const ctxItems = document.getElementById('topItemsChart').getContext('2d');
+        new Chart(ctxItems, {
+            type: 'bar',
+            data: {
+                labels: itemsData.labels,
+                datasets: [{
+                    label: 'Total Units Sold',
+                    data: itemsData.data,
+                    backgroundColor: 'rgba(34, 197, 94, 0.7)',
+                    borderColor: 'rgba(22, 163, 74, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: { 
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error("Error fetching top selling items data:", error);
+    }
+});
+</script>
+{% endblock %}

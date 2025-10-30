@@ -1,0 +1,67 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block page_title %}Live Delivery Map{% endblock page_title %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-md overflow-hidden">
+    <div id="map" class="w-full"></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Dharmanagar, Tripura, India ke coordinates
+    const map = L.map('map').setView([24.3725, 92.1661], 14);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    let riderMarkers = {}; // Rider markers ko store karne ke liye object
+
+    // Rider icon define karna
+    const riderIcon = L.icon({
+        iconUrl: 'https://cdn-icons-png.flaticon.com/512/3448/3448609.png',
+        iconSize: [40, 40],
+    });
+
+    async function updateRiderLocations() {
+        try {
+            const response = await fetch("{% url 'api_get_rider_locations' %}");
+            const data = await response.json();
+
+            // Pehle purane markers hatayein jo ab active nahi hain
+            Object.keys(riderMarkers).forEach(riderId => {
+                if (!data.locations.find(loc => loc.rider_id == riderId)) {
+                    map.removeLayer(riderMarkers[riderId]);
+                    delete riderMarkers[riderId];
+                }
+            });
+
+            // Naye markers add ya update karein
+            data.locations.forEach(rider => {
+                const riderId = rider.rider_id;
+                const latLng = [rider.lat, rider.lng];
+                const popupContent = `<b>${rider.name}</b><br>Status: ${rider.status}`;
+
+                if (riderMarkers[riderId]) {
+                    // Marker pehle se hai, to position update karein
+                    riderMarkers[riderId].setLatLng(latLng).getPopup().setContent(popupContent);
+                } else {
+                    // Naya marker banayein
+                    const marker = L.marker(latLng, {icon: riderIcon}).addTo(map)
+                        .bindPopup(popupContent);
+                    riderMarkers[riderId] = marker;
+                }
+            });
+
+        } catch (error) {
+            console.error('Error fetching rider locations:', error);
+        }
+    }
+
+    // Har 5 second mein locations update karein
+    updateRiderLocations(); // Pehli baar turant load karein
+    setInterval(updateRiderLocations, 5000);
+});
+</script>
+{% endblock %}

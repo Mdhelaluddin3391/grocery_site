@@ -25,6 +25,9 @@ INSTALLED_APPS = [
     'store',
     'cart',
     'dashboard',
+    'wms',
+    'riders',
+    'picking',
 ]
 
 MIDDLEWARE = [

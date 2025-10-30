@@ -1,4 +1,4 @@
 # dashboard/models.py
 from django.db import models
 
-# AuthorizedStaff model ko yahan se hata diya gaya hai.
+# Is app mein ab koi models nahi hain.
