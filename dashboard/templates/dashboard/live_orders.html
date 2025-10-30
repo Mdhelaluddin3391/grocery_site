@@ -4,11 +4,11 @@
 {% block content %}
 
 {% if messages %}
-    {% for message in messages %}
-    <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6" role="alert">
-        <p>{{ message }}</p>
-    </div>
-    {% endfor %}
+{% for message in messages %}
+<div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6" role="alert">
+    <p>{{ message }}</p>
+</div>
+{% endfor %}
 {% endif %}
 
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -32,17 +32,24 @@
 
 <div class="border-b border-gray-200 mb-6">
     <nav class="-mb-px flex space-x-6 overflow-x-auto" aria-label="Tabs">
-        <a href="{% url 'live_orders' %}" class="{% if active_status == 'All' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">All Orders</a>
-        <a href="?status=Pending" class="{% if active_status == 'Pending' %}border-yellow-500 text-yellow-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Pending</a>
-        <a href="?status=Processing" class="{% if active_status == 'Processing' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Processing</a>
-        <a href="?status=Packed" class="{% if active_status == 'Packed' %}border-green-500 text-green-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Packed</a>
-        <a href="?status=Dispatched" class="{% if active_status == 'Dispatched' %}border-indigo-500 text-indigo-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Dispatched</a>
+        <a href="{% url 'live_orders' %}"
+            class="{% if active_status == 'All' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">All
+            Orders</a>
+        <a href="?status=Pending"
+            class="{% if active_status == 'Pending' %}border-yellow-500 text-yellow-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Pending</a>
+        <a href="?status=Processing"
+            class="{% if active_status == 'Processing' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Processing</a>
+        <a href="?status=Packed"
+            class="{% if active_status == 'Packed' %}border-green-500 text-green-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Packed</a>
+        <a href="?status=Dispatched"
+            class="{% if active_status == 'Dispatched' %}border-indigo-500 text-indigo-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Dispatched</a>
     </nav>
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
     <form method="get" class="w-full">
-        <input type="text" name="q" value="{{ search_query }}" class="w-full px-4 py-2 border rounded-lg" placeholder="Search by Order ID...">
+        <input type="text" name="q" value="{{ search_query }}" class="w-full px-4 py-2 border rounded-lg"
+            placeholder="Search by Order ID...">
     </form>
     <div class="text-right">
         <button onclick="toggleFilter()" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300">
@@ -55,15 +62,20 @@
     <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
         <div>
             <label for="start_date" class="block text-sm font-medium text-gray-700">Start Date</label>
-            <input type="date" name="start_date" id="start_date" value="{{ start_date|default:'' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+            <input type="date" name="start_date" id="start_date" value="{{ start_date|default:'' }}"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
         </div>
         <div>
             <label for="end_date" class="block text-sm font-medium text-gray-700">End Date</label>
-            <input type="date" name="end_date" id="end_date" value="{{ end_date|default:'' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+            <input type="date" name="end_date" id="end_date" value="{{ end_date|default:'' }}"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
         </div>
         <div class="md:col-span-2 flex items-center gap-4">
-            <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700">Apply Filter</button>
-            <a href="{% url 'export_orders_csv' %}?{{ request.GET.urlencode }}" class="w-full text-center bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700">Download CSV</a>
+            <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700">Apply
+                Filter</button>
+            <a href="{% url 'export_orders_csv' %}?{{ request.GET.urlencode }}"
+                class="w-full text-center bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700">Download
+                CSV</a>
         </div>
     </form>
 </div>
@@ -86,54 +98,70 @@
                 <tr class="hover:bg-gray-50">
                     {# ... (template ka upar ka code waise hi) ... #}
 
-<td class="px-6 py-4">
-    <div class="flex items-center gap-2">
-        {# --- ACTION BUTTONS KA NAYA LOGIC --- #}
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-2">
+                            {# --- ACTION BUTTONS KA NAYA LOGIC --- #}
 
-        {# Pending Orders ke liye #}
-        {% if order.status == 'Pending' %}
-            <a href="{% url 'delivery_map' %}?lat={{ order.address.latitude }}&lng={{ order.address.longitude }}" class="px-3 py-1 text-xs font-medium text-white bg-gray-500 rounded-md hover:bg-gray-600" title="View Location">
-                Map
-            </a>
-            <form action="{% url 'cancel_order' order.order_id %}" method="post" onsubmit="return confirm('Are you sure you want to cancel this order?');">
-                {% csrf_token %}
-                <button type="submit" class="px-3 py-1 text-xs font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Cancel</button>
-            </form>
+                            {# Pending Orders ke liye #}
+                            {% if order.status == 'Pending' %}
+                            <a href="{% url 'delivery_map' %}?lat={{ order.address.latitude }}&lng={{ order.address.longitude }}"
+                                class="px-3 py-1 text-xs font-medium text-white bg-gray-500 rounded-md hover:bg-gray-600"
+                                title="View Location">
+                                Map
+                            </a>
+                            <form action="{% url 'cancel_order' order.order_id %}" method="post"
+                                onsubmit="return confirm('Are you sure you want to cancel this order?');">
+                                {% csrf_token %}
+                                <button type="submit"
+                                    class="px-3 py-1 text-xs font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Cancel</button>
+                            </form>
 
-        {# Processing aur Packed Orders ke liye #}
-        {% elif order.status == 'Processing' or order.status == 'Packed' %}
-            <form action="{% url 'update_order_status_from_list' order.order_id %}" method="post">
-                {% csrf_token %}
-                {% if order.status == 'Processing' %}
-                    <input type="hidden" name="next_status" value="Packed">
-                    <button type="submit" class="px-3 py-1 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">Move to Packed</button>
-                {% elif order.status == 'Packed' %}
-                     <input type="hidden" name="next_status" value="Dispatched">
-                    <button type="submit" class="px-3 py-1 text-xs font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700">Dispatch</button>
-                {% endif %}
-            </form>
-            <form action="{% url 'cancel_order' order.order_id %}" method="post" onsubmit="return confirm('Are you sure you want to cancel this order?');">
-                {% csrf_token %}
-                <button type="submit" class="px-3 py-1 text-xs font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Cancel</button>
-            </form>
-        
-        {# Dispatched Orders ke liye #}
-        {% elif order.status == 'Dispatched' %}
-            <a href="{% url 'delivery_map' %}?lat={{ order.address.latitude }}&lng={{ order.address.longitude }}" class="px-3 py-1 text-xs font-medium text-white bg-gray-500 rounded-md hover:bg-gray-600" title="View Location">
-                Track
-            </a>
-        
-        {# Baaki sabhi ke liye #}
-        {% else %}
-            <span class="text-xs text-gray-400">No Action</span>
-        {% endif %}
-    </div>
-</td>
+                            {# Processing aur Packed Orders ke liye #}
+                            {% elif order.status == 'Processing' or order.status == 'Packed' %}
+                            <form action="{% url 'update_order_status_from_list' order.order_id %}" method="post">
+                                {% csrf_token %}
+                                {% if order.status == 'Processing' %}
+                                <input type="hidden" name="next_status" value="Packed">
+                                <button type="submit"
+                                    class="px-3 py-1 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">Move
+                                    to Packed</button>
+                                {% elif order.status == 'Packed' %}
+                                {# Yeh ab ek link hai jo sahi page par le jayega #}
+                                <a href="{% url 'packed_orders' %}"
+                                    class="px-3 py-1 text-xs font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+                                    title="Go to dispatch page to assign a rider">
+                                    Assign Rider
+                                </a>
+                                {% endif %}
+                            </form>
+                            <form action="{% url 'cancel_order' order.order_id %}" method="post"
+                                onsubmit="return confirm('Are you sure you want to cancel this order?');">
+                                {% csrf_token %}
+                                <button type="submit"
+                                    class="px-3 py-1 text-xs font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Cancel</button>
+                            </form>
 
-{# ... (template ka baaki code waise hi) ... #}
+                            {# Dispatched Orders ke liye #}
+                            {% elif order.status == 'Dispatched' %}
+                            <a href="{% url 'delivery_map' %}?lat={{ order.address.latitude }}&lng={{ order.address.longitude }}"
+                                class="px-3 py-1 text-xs font-medium text-white bg-gray-500 rounded-md hover:bg-gray-600"
+                                title="View Location">
+                                Track
+                            </a>
+
+                            {# Baaki sabhi ke liye #}
+                            {% else %}
+                            <span class="text-xs text-gray-400">No Action</span>
+                            {% endif %}
+                        </div>
+                    </td>
+
+                    {# ... (template ka baaki code waise hi) ... #}
                 </tr>
                 {% empty %}
-                <tr><td colspan="6" class="text-center py-8 text-gray-500">No orders found.</td></tr>
+                <tr>
+                    <td colspan="6" class="text-center py-8 text-gray-500">No orders found.</td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>

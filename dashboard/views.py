@@ -220,3 +220,19 @@ def cancel_order_view(request, order_id):
         messages.error(request, f"Cannot cancel order. It has already been {order.status}.")
         
     return redirect('live_orders')
+
+@user_passes_test(staff_check, login_url='staff_login')
+def packed_orders_view(request):
+    """
+    Manager ko sabhi packed orders dikhata hai, rider assign karne ke option ke saath.
+    """
+    packed_orders = Order.objects.filter(status='Packed').order_by('created_at')
+
+    # Sabhi available riders (staff users) ko fetch karein
+    available_riders = CustomUser.objects.filter(is_staff=True, is_superuser=False)
+
+    context = {
+        'packed_orders': packed_orders,
+        'available_riders': available_riders,
+    }
+    return render(request, 'dashboard/packed_orders.html', context)

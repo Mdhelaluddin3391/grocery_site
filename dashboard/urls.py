@@ -20,4 +20,5 @@ urlpatterns = [
     path('api/charts/top-selling-items/', views.top_selling_items_api, name='api_top_selling_items'),
     path('api/charts/monthly-revenue/', views.monthly_revenue_api, name='api_monthly_revenue'),
     path('order/cancel/<str:order_id>/', views.cancel_order_view, name='cancel_order'),
+    path('packed-orders/', views.packed_orders_view, name='packed_orders'),
 ]

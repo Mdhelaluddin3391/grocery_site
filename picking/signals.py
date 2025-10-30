@@ -1,20 +1,23 @@
 # picking/signals.py
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.db import transaction  # <-- YEH LINE ADD KAREIN
 from cart.models import Order
 from users.models import CustomUser
 from .models import PickingJob, PickedItem
 
-@receiver(post_save, sender=Order)
-def create_and_assign_picking_job(sender, instance, created, **kwargs):
+def actual_job_creation_logic(order_pk):
     """
-    Naya order aane par PickingJob banata hai aur automatically ek
-    available picker ko assign kar deta hai.
+    Yeh function tab chalega jab transaction safal ho jayega.
     """
-    if created and instance.status == 'Pending':
-        # Step 1: Naye order ke liye PickingJob banayein
-        picking_job = PickingJob.objects.create(order=instance)
+    try:
+        instance = Order.objects.get(pk=order_pk)
         
+        # Step 1: Naye order ke liye PickingJob banayein
+        picking_job, created = PickingJob.objects.get_or_create(order=instance)
+        if not created:
+            return # Job pehle se hai, kuch na karein
+
         # Step 2: Order ke har item ke liye PickedItem record banayein
         for order_item in instance.items.all():
             PickedItem.objects.create(
@@ -23,14 +26,12 @@ def create_and_assign_picking_job(sender, instance, created, **kwargs):
             )
 
         # Step 3: Ek available picker ko dhoondein
-        # Abhi ke liye, hum pehle available staff ko le rahe hain jo superuser nahi hai.
-        # Future mein hum 'is_available' jaisa status add kar sakte hain.
         available_picker = CustomUser.objects.filter(
-            is_staff=True, 
+            is_staff=True,
             is_superuser=False
-        ).first() # Pehla available picker
+        ).first()
 
-        # Step 4: Agar picker milta hai, to use assign karein aur status update karein
+        # Step 4: Agar picker milta hai, to use assign karein
         if available_picker:
             picking_job.picker = available_picker
             picking_job.status = 'Assigned'
@@ -38,4 +39,18 @@ def create_and_assign_picking_job(sender, instance, created, **kwargs):
 
             # Order ka status 'Processing' karein
             instance.status = 'Processing'
-            instance.save()
+            instance.picker = available_picker
+            instance.save(update_fields=['status', 'picker'])
+
+    except Order.DoesNotExist:
+        pass # Agar order exist nahi karta to kuch na karein
+
+
+@receiver(post_save, sender=Order)
+def create_and_assign_picking_job(sender, instance, created, **kwargs):
+    """
+    Naya order aane par, transaction commit hone ke baad job creation ko trigger karta hai.
+    """
+    if created and instance.status == 'Pending':
+        # Mukhya logic ko transaction commit hone ke baad chalayein
+        transaction.on_commit(lambda: actual_job_creation_logic(instance.pk))

@@ -1,75 +1,255 @@
-{# cart/templates/cart/checkout.html #}
 {% extends 'store/base.html' %}
 {% load static %}
-{# ... (style block waise hi rahega) ... #}
+
+{% block title %}Checkout{% endblock title %}
+
+{% block extra_css %}
+{# Leaflet Map ke liye CSS file #}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+<link rel="stylesheet" href="{% static 'cart/css/cart_detail.css' %}">
+<style>
+    .checkout-container {
+        max-width: 800px;
+        margin: 20px auto;
+    }
+
+    .checkout-step {
+        background: #fff;
+        padding: 25px;
+        border-radius: 8px;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .checkout-step h3 {
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+    }
+
+    .address-card,
+    .payment-option {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        margin-bottom: 10px;
+        cursor: pointer;
+    }
+
+    .address-card:has(input:checked),
+    .payment-option:has(input:checked) {
+        border-color: #28a745;
+        background-color: #f7fef7;
+    }
+
+    input[type="radio"] {
+        width: 20px;
+        height: 20px;
+    }
+
+    .btn-submit {
+        width: 100%;
+        padding: 15px;
+        font-size: 1.1rem;
+        border: none;
+        border-radius: 8px;
+        background-color: #28a745;
+        color: white;
+        cursor: pointer;
+    }
+
+    /* --- DISABLED OPTION KE LIYE STYLE --- */
+    .payment-option.disabled {
+        background-color: #f8f9fa;
+        color: #adb5bd;
+        cursor: not-allowed;
+    }
+
+    #map {
+        height: 300px;
+        width: 100%;
+        margin-bottom: 15px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+    }
+
+    .location-btn-container {
+        text-align: center;
+        margin: 15px 0;
+    }
+
+    .location-btn {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .form-group p {
+        margin-bottom: 15px;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+</style>
+{% endblock extra_css %}
 
 {% block content %}
 <div class="checkout-container">
     {% if not user.is_authenticated %}
-        <div class="checkout-login-prompt" style="text-align: center; padding: 40px; background: #fff; border-radius: 8px;">
-            <h2>Please Log In</h2>
-            <p>You need to be logged in to proceed with checkout.</p>
-            <a href="{% url 'login' %}?next={{ request.path }}" class="btn-submit" style="text-decoration: none; display: inline-block; width: auto; padding: 12px 25px;">Login or Register</a>
-        </div>
+    <div class="checkout-login-prompt" style="text-align: center; padding: 40px; background: #fff; border-radius: 8px;">
+        <h2>Please Log In</h2>
+        <p>You need to be logged in to proceed with checkout.</p>
+        <a href="{% url 'login' %}?next={{ request.path }}" class="btn-submit"
+            style="text-decoration: none; display: inline-block; width: auto; padding: 12px 25px;">Login or Register</a>
+    </div>
     {% else %}
-        <h1>Checkout</h1>
-        <form method="post" novalidate id="checkout-form">
-            {# ... (baaki form waise hi rahega) ... #}
-            {% csrf_token %}
-            <input type="hidden" name="latitude" id="id_latitude">
-            <input type="hidden" name="longitude" id="id_longitude">
+    <h1>Checkout</h1>
+    <form method="post" novalidate id="checkout-form">
+        {% csrf_token %}
+        {# Hidden fields for latitude and longitude #}
+        {{ address_form.latitude }}
+        {{ address_form.longitude }}
 
-            <div class="checkout-step">
-                <h3>1. Shipping Address</h3>
-                {% if addresses %}
-                    {% for address in addresses %}
-                    <label for="address-{{ address.id }}" class="address-card">
-                        <input type="radio" name="address_choice" value="existing" id="address-{{ address.id }}" onclick="document.getElementById('selected_address_id').value='{{ address.id }}'">
-                        <div>
-                            <strong>{{ address.get_address_type_display }}</strong>
-                            <p>{{ address.address_line_1 }}, {% if address.address_line_2 %}{{ address.address_line_2 }},{% endif %} {{ address.city }}, {{ address.state }} - {{ address.pincode }}</p>
-                        </div>
-                    </label>
-                    {% endfor %}
-                    <input type="hidden" name="selected_address" id="selected_address_id">
-                {% endif %}
-
-                <label for="new-address-radio" class="address-card">
-                    <input type="radio" name="address_choice" value="new" id="new-address-radio" {% if not addresses %}checked{% endif %}>
-                    <strong>Add a New Address</strong>
-                </label>
-
-                <div id="new-address-form" style="margin-top: 15px; {% if addresses %}display:none;{% endif %}">
-                    <p style="text-align: center; color: #555; margin: 15px 0;">
-    <strong>Quickly fill your address using your current location, or feel free to enter it manually below.</strong>                </p>
-                    <div class="location-btn-container">
-                        <button type="button" class="location-btn" onclick="getLocation()">📍 Use My Current Location</button>
-                    </div>
-                    <div id="map"></div>
-                    <div class="form-group">{{ address_form.as_p }}</div>
+        <div class="checkout-step">
+            <h3>1. Shipping Address</h3>
+            {% if addresses %}
+            {% for address in addresses %}
+            <label class="address-card">
+                <input type="radio" name="address_choice" value="existing"
+                    onclick="document.getElementById('selected_address_id').value='{{ address.id }}'; document.getElementById('new-address-form').style.display='none';">
+                <div>
+                    <strong>{{ address.get_address_type_display }}</strong>
+                    <p>{{ address.address_line_1 }}, {{ address.city }}, {{ address.state }} - {{ address.pincode }}</p>
                 </div>
-            </div>
-
-            <div class="checkout-step">
-                <h3>2. Payment Method</h3>
-                <label for="cod" class="payment-option selected">
-                    <input type="radio" id="cod" name="payment_method" value="COD" checked>
-                    <label for="cod">Cash on Delivery (COD)</label>
-                </label>
-                <label for="upi" class="payment-option disabled">
-                    <input type="radio" id="upi" name="payment_method" value="UPI" disabled>
-                    <label for="upi">UPI / Online Payment (Currently Unavailable)</label>
-                </label>
-            </div>
-
-            {% if error %}
-                <p class="error-message">{{ error }}</p>
+            </label>
+            {% endfor %}
+            <input type="hidden" name="selected_address" id="selected_address_id">
             {% endif %}
 
-            <button type="submit" class="btn-submit">Place Order</button>
-        </form>
+            <label class="address-card">
+                <input type="radio" name="address_choice" value="new" id="new-address-radio" {% if not addresses %}checked{% endif %} onclick="document.getElementById('new-address-form').style.display='block';">
+                <strong>Add a New Address</strong>
+            </label>
+
+            <div id="new-address-form" style="margin-top: 20px; {% if addresses %}display:none;{% endif %}">
+                <p style="text-align: center; color: #555; margin-bottom: 15px;">
+                    <strong>Pin your location on the map, or fill the address manually.</strong>
+                </p>
+                <div id="map"></div>
+                <div class="location-btn-container">
+                    <button type="button" class="location-btn" onclick="getUserLocation()">📍 Use My Current
+                        Location</button>
+                </div>
+                <div class="form-group">
+                    {{ address_form.as_p }}
+                </div>
+            </div>
+        </div>
+
+        <div class="checkout-step">
+            <h3>2. Payment Method</h3>
+            <label for="cod" class="payment-option">
+                <input type="radio" id="cod" name="payment_method" value="COD" checked>
+                Cash on Delivery (COD)
+            </label>
+            <label for="upi" class="payment-option disabled">
+                <input type="radio" id="upi" name="payment_method" value="UPI" disabled>
+                UPI / Online Payment (Currently Unavailable)
+            </label>
+        </div>
+
+        {% if error %}
+        <p style="color: red; text-align: center;">{{ error }}</p>
+        {% endif %}
+
+        <button type="submit" class="btn-submit">Place Order</button>
+    </form>
     {% endif %}
 </div>
 {% endblock content %}
 
-{# ... (extra_js block waise hi rahega) ... #}
+
+{% block extra_js %}
+{# Leaflet Map ke liye JavaScript file #}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<script>
+    const latField = document.getElementById('id_latitude');
+    const lonField = document.getElementById('id_longitude');
+    const address1Field = document.getElementById('id_address_line_1');
+    const cityField = document.getElementById('id_city');
+    const stateField = document.getElementById('id_state');
+    const pincodeField = document.getElementById('id_pincode');
+
+    // Default location (Dharmanagar)
+    let map = L.map('map').setView([24.37, 92.16], 13);
+    let marker = L.marker([24.37, 92.16], { draggable: true }).addTo(map);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    // Function to update form fields from map marker
+    function updateFormFields(lat, lng) {
+        latField.value = lat;
+        lonField.value = lng;
+
+        // Reverse Geocoding using Nominatim
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+            .then(res => res.json())
+            .then(data => {
+                const address = data.address;
+                address1Field.value = data.display_name.split(',')[0] || '';
+                cityField.value = address.city || address.town || address.village || '';
+                stateField.value = address.state || '';
+                pincodeField.value = address.postcode || '';
+            });
+    }
+
+    // Initialize with default location
+    updateFormFields(24.37, 92.16);
+
+    // Event listener for marker drag
+    marker.on('dragend', function (event) {
+        const position = marker.getLatLng();
+        updateFormFields(position.lat, position.lng);
+    });
+
+    // Get user's current location on button click
+    function getUserLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                map.setView([lat, lng], 16);
+                marker.setLatLng([lat, lng]);
+                updateFormFields(lat, lng);
+            });
+        }
+    }
+
+    // Toggle new address form
+    document.addEventListener('DOMContentLoaded', function () {
+        const newAddressRadio = document.getElementById('new-address-radio');
+        const newAddressForm = document.getElementById('new-address-form');
+        document.querySelectorAll('input[name="address_choice"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                newAddressForm.style.display = newAddressRadio.checked ? 'block' : 'none';
+            });
+        });
+    });
+</script>
+{% endblock extra_js %}

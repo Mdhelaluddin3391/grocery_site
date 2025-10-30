@@ -1,3 +1,4 @@
+# picking/views.py
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import user_passes_test
 from django.http import JsonResponse
@@ -9,13 +10,18 @@ def staff_check(user):
 
 @user_passes_test(staff_check, login_url='staff_login')
 def picker_dashboard_view(request):
-    assigned_jobs = PickingJob.objects.filter(picker=request.user, status__in=['Assigned', 'In Progress']).order_by('created_at')
+    # Sirf assigned aur in-progress jobs dikhayein
+    assigned_jobs = PickingJob.objects.filter(
+        picker=request.user,
+        status__in=['Assigned', 'In Progress']
+    ).order_by('created_at')
     context = {'assigned_jobs': assigned_jobs}
     return render(request, 'picking/picker_dashboard.html', context)
 
 @user_passes_test(staff_check, login_url='staff_login')
 def picking_job_detail_view(request, job_id):
     job = get_object_or_404(PickingJob, id=job_id, picker=request.user)
+    # Job open karte hi status 'In Progress' kar dein
     if job.status == 'Assigned':
         job.status = 'In Progress'
         job.save()
@@ -28,13 +34,18 @@ def mark_item_as_picked_api(request, picked_item_id):
         picked_item.is_picked = True
         picked_item.picked_at = timezone.now()
         picked_item.save()
+
         job = picked_item.picking_job
+        # Check karein ki sabhi items pick ho gaye hain
         all_items_picked = not job.picked_items.filter(is_picked=False).exists()
+
         if all_items_picked:
+            # Job aur Order ka status update karein
             job.status = 'Completed'
             job.save()
-            job.order.status = 'Packed'
+            job.order.status = 'Packed' # YEH IMPORTANT HAI
             job.order.save()
             return JsonResponse({'status': 'success', 'all_picked': True})
+
         return JsonResponse({'status': 'success', 'all_picked': False})
     return JsonResponse({'status': 'error'}, status=400)

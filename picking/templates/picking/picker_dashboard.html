@@ -7,24 +7,73 @@
     <div class="p-6 border-b">
         <h3 class="text-xl font-semibold">Assigned Orders to Pick</h3>
     </div>
-    <div class="divide-y">
+    <div id="jobs-accordion" class="divide-y">
         {% for job in assigned_jobs %}
-        <a href="#" class="block p-6 hover:bg-gray-50">
-            <div class="flex justify-between items-center">
-                <div>
-                    <p class="font-bold text-blue-600">Order #{{ job.order.order_id }}</p>
-                    <p class="text-sm text-gray-500">{{ job.order.items.count }} item{{ job.order.items.count|pluralize }}</p>
-                </div>
-                <div>
-                    <span class="px-3 py-1 text-sm font-semibold rounded-full bg-blue-100 text-blue-800">
-                        {{ job.status }}
-                    </span>
+        <div class="job-item">
+            {# --- Order ka Header --- #}
+            <div class="p-6 cursor-pointer hover:bg-gray-50" data-job-id="{{ job.id }}">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="font-bold text-blue-600">Order #{{ job.order.order_id }}</p>
+                        <p class="text-sm text-gray-500">{{ job.order.items.count }} item{{ job.order.items.count|pluralize }}</p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="px-3 py-1 text-sm font-semibold rounded-full bg-blue-100 text-blue-800">
+                            {{ job.status }}
+                        </span>
+                        {# --- Details Button --- #}
+                        <button class="toggle-details-btn text-sm text-blue-600 hover:underline">Show Details ▼</button>
+                    </div>
                 </div>
             </div>
-        </a>
+
+            {# --- Items ki Hidden List --- #}
+            <div id="details-{{ job.id }}" class="job-details hidden bg-gray-50 p-6 border-t">
+                <h4 class="font-semibold mb-3">Items to Pick:</h4>
+                <ul class="divide-y divide-gray-200">
+                    {% for item in job.picked_items.all %}
+                    <li class="py-2 flex justify-between">
+                        <div>
+                            <p class="font-medium">{{ item.order_item.product.name }}</p>
+                            <p class="text-xs text-gray-500">Barcode: {{ item.order_item.product.barcode|default:"N/A" }}</p>
+                        </div>
+                        <p class="font-bold text-lg">Qty: {{ item.order_item.quantity }}</p>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {# --- Go to Picking Page Link --- #}
+                <a href="{% url 'picking_job_detail' job.id %}" class="mt-4 inline-block bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700">
+                    Start Picking →
+                </a>
+            </div>
+        </div>
         {% empty %}
         <p class="p-8 text-center text-gray-500">You have no pending orders to pick. Good job!</p>
         {% endfor %}
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.toggle-details-btn').forEach(button => {
+        button.addEventListener('click', (event) => {
+            event.stopPropagation(); // Link par click hone se rokein
+            
+            const jobDiv = button.closest('.job-item');
+            const detailsId = 'details-' + jobDiv.querySelector('[data-job-id]').dataset.jobId;
+            const detailsPanel = document.getElementById(detailsId);
+
+            const isHidden = detailsPanel.classList.contains('hidden');
+            if (isHidden) {
+                detailsPanel.classList.remove('hidden');
+                button.textContent = 'Hide Details ▲';
+            } else {
+                detailsPanel.classList.add('hidden');
+                button.textContent = 'Show Details ▼';
+            }
+        });
+    });
+});
+</script>
+
 {% endblock %}

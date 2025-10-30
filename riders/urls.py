@@ -9,4 +9,6 @@ urlpatterns = [
     path('app/', views.rider_app_dashboard_view, name='rider_app_dashboard'),
     path('app/deliver/<str:order_id>/', views.mark_as_delivered_view, name='mark_as_delivered'),
     path('assign-delivery/<str:order_id>/', views.assign_rider_view, name='assign_rider'),
+    path('assign-delivery/<str:order_id>/', views.assign_rider_view, name='assign_rider'),
+    path('app/deliver/<str:order_id>/', views.mark_as_delivered_view, name='mark_as_delivered'),
 ]

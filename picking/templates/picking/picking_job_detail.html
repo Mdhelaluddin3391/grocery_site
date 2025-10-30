@@ -1,60 +1,114 @@
 {% extends 'dashboard/base_dashboard.html' %}
 {% block page_title %}Picking Order #{{ job.order.order_id }}{% endblock page_title %}
+
 {% block content %}
 <div class="max-w-4xl mx-auto">
+    
     <div id="completion-message" class="hidden bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6" role="alert">
         <p class="font-bold">All items picked!</p>
         <p>This order has been moved to 'Packed'. Redirecting you to your dashboard...</p>
     </div>
+
     <div class="bg-white rounded-lg shadow-md overflow-hidden">
         <div class="p-6 border-b">
             <h3 class="text-xl font-semibold">Items for Order #{{ job.order.order_id }}</h3>
         </div>
         <div id="item-list" class="divide-y">
             {% for item in job.picked_items.all %}
-            <div class="p-4 flex justify-between items-center" id="item-row-{{ item.id }}">
-                <div>
-                    <p class="font-bold">{{ item.order_item.product.name }}</p>
-                    <p class="text-sm text-gray-600">Quantity to Pick: <span class="text-lg font-bold">{{ item.order_item.quantity }}</span></p>
-                    <p class="text-xs text-gray-500">Barcode: {{ item.order_item.product.barcode|default:"N/A" }}</p>
+            <div class="p-4 flex justify-between items-center item-row" id="item-row-{{ item.id }}">
+                
+                {# Section 1: Image and Product Name #}
+                <div class="flex items-center gap-4">
+                    <img src="{{ item.order_item.product.image|default:'https://cdn-icons-png.flaticon.com/512/1147/1147558.png' }}" 
+                         alt="{{ item.order_item.product.name }}" 
+                         class="w-16 h-16 rounded-md object-cover bg-gray-100">
+                    <div>
+                        <p class="font-bold text-gray-800">{{ item.order_item.product.name }}</p>
+                        <p class="text-xs text-gray-500">Barcode: {{ item.order_item.product.barcode|default:"N/A" }}</p>
+                    </div>
                 </div>
-                <div>
-                    <button class="pick-btn px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700" data-item-id="{{ item.id }}">
-                        Pick Item
-                    </button>
+
+                {# Section 2: Quantity Picker #}
+                <div class="quantity-picker flex items-center gap-2 text-lg" 
+                     data-item-id="{{ item.id }}" 
+                     data-target-quantity="{{ item.order_item.quantity }}">
+                    
+                    <button class="quantity-btn minus-btn bg-gray-200 text-gray-600 rounded-full w-8 h-8 font-bold" disabled>-</button>
+                    
+                    <span class="picked-quantity font-bold text-blue-600">0</span>
+                    <span class="text-gray-400">/</span>
+                    <span class="target-quantity font-semibold text-gray-700">{{ item.order_item.quantity }}</span>
+                    
+                    <button class="quantity-btn plus-btn bg-blue-500 text-white rounded-full w-8 h-8 font-bold">+</button>
                 </div>
+
             </div>
             {% endfor %}
         </div>
     </div>
 </div>
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.pick-btn').forEach(button => {
-        button.addEventListener('click', async () => {
-            const itemId = button.dataset.itemId;
-            const url = `/picking/api/pick-item/${itemId}/`;
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'X-CSRFToken': '{{ csrf_token }}' }
-                });
-                const data = await response.json();
-                if (data.status === 'success') {
-                    button.textContent = 'Picked ✔';
-                    button.disabled = true;
-                    button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-                    button.classList.add('bg-green-600', 'cursor-not-allowed');
-                    if (data.all_picked) {
-                        document.getElementById('completion-message').classList.remove('hidden');
-                        setTimeout(() => {
-                            window.location.href = "{% url 'picker_dashboard' %}";
-                        }, 2000);
-                    }
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('An error occurred. Please try again.');
+
+    async function markItemAsPicked(itemId) {
+        const url = `/picking/api/pick-item/${itemId}/`;
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+            });
+            const data = await response.json();
+            
+            if (data.status === 'success' && data.all_picked) {
+                document.getElementById('completion-message').classList.remove('hidden');
+                setTimeout(() => {
+                    window.location.href = "{% url 'picker_dashboard' %}";
+                }, 2500);
+            }
+        } catch (error) {
+            console.error('Error marking item as picked:', error);
+            alert('An error occurred. Please try again.');
+        }
+    }
+
+    document.querySelectorAll('.quantity-picker').forEach(picker => {
+        const plusBtn = picker.querySelector('.plus-btn');
+        const minusBtn = picker.querySelector('.minus-btn');
+        const pickedQtySpan = picker.querySelector('.picked-quantity');
+        const targetQuantity = parseInt(picker.dataset.targetQuantity, 10);
+        const itemId = picker.dataset.itemId;
+        let currentQuantity = 0;
+
+        plusBtn.addEventListener('click', () => {
+            if (currentQuantity < targetQuantity) {
+                currentQuantity++;
+                pickedQtySpan.textContent = currentQuantity;
+                minusBtn.disabled = false;
+            }
+
+            if (currentQuantity === targetQuantity) {
+                plusBtn.disabled = true;
+                minusBtn.disabled = true; // Lock controls once target is met
+                
+                // Visual feedback for completion
+                picker.closest('.item-row').classList.add('bg-green-50');
+                plusBtn.classList.remove('bg-blue-500');
+                plusBtn.classList.add('bg-green-600');
+                plusBtn.textContent = '✔';
+                
+                // Mark the item as picked via API
+                markItemAsPicked(itemId);
+            }
+        });
+
+        minusBtn.addEventListener('click', () => {
+            if (currentQuantity > 0) {
+                currentQuantity--;
+                pickedQtySpan.textContent = currentQuantity;
+            }
+            if (currentQuantity === 0) {
+                minusBtn.disabled = true;
             }
         });
     });

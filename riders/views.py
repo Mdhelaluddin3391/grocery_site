@@ -108,5 +108,67 @@ def assign_rider_view(request, order_id):
     
     return redirect('packed_orders')
 
+# riders/views.py
 
+# ... (existing views) ...
+
+@user_passes_test(staff_check, login_url='staff_login')
+def assign_rider_view(request, order_id):
+    if request.method == 'POST':
+        order = get_object_or_404(Order, order_id=order_id)
+        rider_id = request.POST.get('rider_id')
+
+        if not rider_id:
+            messages.error(request, "Please select a rider.")
+            return redirect('packed_orders')
+
+        try:
+            # Rider ko CustomUser model se get karein
+            rider_user = CustomUser.objects.get(id=rider_id, is_staff=True)
+            order.rider = rider_user
+            order.status = 'Dispatched'
+            order.save()
+
+            # Rider ka status bhi 'On Delivery' update karein
+            if hasattr(rider_user, 'riderprofile'):
+                rider_user.riderprofile.current_status = 'ON_DELIVERY'
+                rider_user.riderprofile.save()
+
+            messages.success(request, f"Order #{order.order_id} has been dispatched with {rider_user.name}.")
+        except CustomUser.DoesNotExist:
+            messages.error(request, "The selected rider does not exist.")
+
+    return redirect('packed_orders')
+
+
+@user_passes_test(staff_check, login_url='staff_login')
+def rider_app_dashboard_view(request):
+    assigned_orders = Order.objects.filter(
+        status='Dispatched',
+        rider=request.user # Sirf is rider ko assigned orders
+    ).order_by('created_at')
+
+    context = {'assigned_orders': assigned_orders}
+    return render(request, 'riders/app/rider_app_dashboard.html', context)
+
+
+# riders/views.py
+
+# ... (existing views) ...
+
+@user_passes_test(staff_check, login_url='staff_login')
+def mark_as_delivered_view(request, order_id):
+    if request.method == 'POST':
+        order = get_object_or_404(Order, order_id=order_id, rider=request.user)
+        order.status = 'Delivered'
+        order.payment_status = True # Maan rahe hain ki COD mil gaya
+        order.save()
+
+        # Rider ka status wapas 'Available' kar dein
+        if hasattr(request.user, 'riderprofile'):
+            request.user.riderprofile.current_status = 'AVAILABLE'
+            request.user.riderprofile.save()
+
+        messages.success(request, f"Order #{order_id} has been marked as Delivered.")
+    return redirect('rider_app_dashboard')
 # ... (get_rider_locations_api waise hi rahega) ...
